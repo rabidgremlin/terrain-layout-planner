@@ -165,3 +165,7 @@ dist-ssr
 
 NOTES.md
 refdocs/
+
+# Browser test artifacts
+/test-results/
+/playwright-report/
