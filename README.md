@@ -29,8 +29,11 @@ the list or board to open its properties panel below the list; deselecting hides
 the properties panel. Enter its width, height, position, and rotation, then choose
 **Apply**. Positions refer to the footprint's local top-left;
 numeric rotation turns around that origin. The round board handle rotates around
-the footprint's centre and updates its position accordingly. Overlaps and
-positions outside the board remain allowed.
+the footprint's centre and updates its position accordingly. Hold Ctrl while
+dragging the rotation handle to snap to the nearest 15 degrees; release Ctrl
+to return to free rotation during the same drag. This is independent of grid
+visibility and position snapping. Overlaps and positions outside the board
+remain allowed.
 
 Units change the displayed measurements only. Geometry stays in inches in saved
 layouts; centimetre inputs convert using exactly 2.54 cm per inch. Inputs display

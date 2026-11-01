@@ -9,6 +9,8 @@ import { building, loadLayout, saveLayout } from './planner'
 import type { Game, TerrainPiece } from './planner'
 import './App.css'
 
+const rotationSnapAngles = Array.from({ length: 24 }, (_, index) => index * 15)
+
 function ToolbarIcon({ path }: { path: string }) {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path} /></svg>
 }
@@ -48,6 +50,14 @@ function App() {
     const node = layerRef.current?.findOne(`#piece-${selected}`)
     transformerRef.current?.nodes(node ? [node] : [])
   }, [selected, layout])
+  useEffect(() => {
+    function updateRotationSnapping(event: MouseEvent) {
+      transformerRef.current?.rotationSnaps(event.ctrlKey ? rotationSnapAngles : [])
+    }
+    // Update before Konva handles each rotation move, including outside the board.
+    window.addEventListener('mousemove', updateRotationSnapping, true)
+    return () => window.removeEventListener('mousemove', updateRotationSnapping, true)
+  }, [])
   const snap = (value: number) => snapping ? Math.round(value / grid) * grid : value
   function editPiece(next: TerrainPiece) {
     if (layout) updateLayout({ ...layout, pieces: layout.pieces.map(piece => piece.id === next.id ? next : piece) })
@@ -193,7 +203,8 @@ function App() {
               event.target.position({ x: x * scale, y: y * scale })
               editPiece({ ...piece, x, y })
             }} />)}
-            <Transformer ref={transformerRef} resizeEnabled={false} rotateEnabled rotateAnchorOffset={24} />
+            {/* When Ctrl enables snap angles, always choose the nearest one. */}
+            <Transformer ref={transformerRef} resizeEnabled={false} rotateEnabled rotateAnchorOffset={24} rotationSnapTolerance={180} />
           </Layer>
         </Stage>
       </div></div><p className="board-caption">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p></section>
@@ -202,7 +213,7 @@ function App() {
         <ul className="pieces">{layout.pieces.map((piece, index) => <li key={piece.id}><button aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
         {selectedPiece && <section className="panel" aria-label="Selected terrain"><p className="eyebrow">SELECTED TERRAIN</p><h3>{selectedPiece.name}</h3><p>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
           <GeometryEditor key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} onApply={editPiece} />
-          <p>Drag the round handle above the selected footprint to rotate.</p>
+          <p>Drag the round handle above the selected footprint to rotate. Hold Ctrl to snap in 15° increments.</p>
         </section>}
       </aside></div>
     </>}
