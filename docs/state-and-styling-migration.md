@@ -1,7 +1,8 @@
 # State and styling migration
 
-Design decisions agreed during the migration interview. This describes planned
-work; the application has not yet been migrated.
+Design decisions agreed during the migration interview. The state/history
+migration is implemented; the Tailwind styling conversion remains planned in
+issue #19.
 
 ## Scope
 

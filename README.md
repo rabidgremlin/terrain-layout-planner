@@ -55,5 +55,21 @@ or Apply action is one step; a new edit clears redo. Layout changes, including u
 and redo, autosave. History and editor preferences last for the current session;
 the resulting layout survives reload.
 
-Future terrain editing controls must use `useLayoutHistory` in `src/history.ts`
-and commit immutable layout snapshots through the existing editor history.
+Shared editor state lives in the Zustand store in `src/editorStore.ts`. Zundo
+tracks only the layout; selection, units, grid preferences, and save status stay
+outside undo history. Form drafts, validation, DOM/Konva references, drag previews,
+and measured viewport dimensions remain component-local.
+
+Future terrain editing controls must call the store's `commitLayout` action with
+an immutable layout snapshot. Use `createLayout` only to establish a fresh history
+baseline, and the parameterless `undo`/`redo` actions for toolbar or shortcut
+handlers. Subscribe to Zundo's temporal store for reactive history availability;
+do not introduce another undo mechanism. Selection and preference setters must
+not create history entries or clear redo. Unchanged layouts are ignored by
+history equality checks.
+
+Storage continues to contain the raw version-1 layout at
+`terrain-planner.current-layout.v1`. The editor store loads it once per session
+and autosaves layout changes, including undo/redo, through the existing validated
+storage boundary. UI preferences and history are not persisted. Browser tests
+cover compatibility with existing saves and preference/no-op history behaviour.

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Rect, Line, Transformer } from 'react-konva'
 import Konva from 'konva'
-import { useLayoutHistory } from './history'
+import { useStore } from 'zustand'
+import { useEditorStore } from './editorStore'
 import { GeometryEditor } from './GeometryEditor'
 import { measurement, unitFactor } from './measurements'
 import type { Units } from './measurements'
-import { building, loadLayout, saveLayout } from './planner'
+import { building } from './planner'
 import type { Game, TerrainPiece } from './planner'
 import './App.css'
 
@@ -16,20 +17,19 @@ function ToolbarIcon({ path }: { path: string }) {
 }
 
 function App() {
-  const [initial] = useState(loadLayout)
-  const { layout, commit: updateLayout, undo, redo, canUndo, canRedo } = useLayoutHistory(initial.layout)
-  const [units, setUnits] = useState<Units>('in')
-  const [snapping, setSnapping] = useState(false)
-  const [showGrid, setShowGrid] = useState(false)
-  const [grid, setGrid] = useState(1)
+  const {
+    layout, selected, units, snapping, showGrid, grid, saved, loadWarning,
+    createLayout, commitLayout: updateLayout, undo, redo,
+    setSelected, setUnits, setSnapping, setShowGrid, setGrid,
+  } = useEditorStore()
+  const canUndo = useStore(useEditorStore.temporal, state => state.pastStates.length > 0)
+  const canRedo = useStore(useEditorStore.temporal, state => state.futureStates.length > 0)
   const transformerRef = useRef<Konva.Transformer>(null)
   const layerRef = useRef<Konva.Layer>(null)
   const [game, setGame] = useState<Game>('firefight')
   const [size, setSize] = useState('48')
   const [width, setWidth] = useState('48')
   const [height, setHeight] = useState('48')
-  const [selected, setSelected] = useState<string | null>(null)
-  const [saved, setSaved] = useState(true)
   const [formError, setFormError] = useState('')
   const boardRef = useRef<HTMLDivElement>(null)
   const templatePreviewRef = useRef<HTMLSpanElement>(null)
@@ -41,11 +41,6 @@ function App() {
     terrainDragRef.current = null
   }
   useEffect(() => () => { terrainDragRef.current?.image?.remove() }, [])
-  useEffect(() => {
-    // Storage can fail independently of layout state; report the write result.
-    // oxlint-disable-next-line react/set-state-in-effect
-    if (layout) setSaved(saveLayout(layout))
-  }, [layout])
   useEffect(() => {
     const node = layerRef.current?.findOne(`#piece-${selected}`)
     transformerRef.current?.nodes(node ? [node] : [])
@@ -128,14 +123,14 @@ function App() {
     </header>
     {!layout ? <section className="setup">
       <p className="eyebrow">START A TABLE</p><h2>Your next battlefield</h2><p>Choose your game and the physical size of your board.</p>
-      {initial.warning && <p role="alert">{initial.warning}</p>}
+      {loadWarning && <p role="alert">{loadWarning}</p>}
       {formError && <p role="alert">{formError}</p>}
       <form onSubmit={event => {
         event.preventDefault()
         const boardWidth = Number(size === 'custom' ? width : size) / (size === 'custom' ? unitFactor(units) : 1)
         const boardHeight = Number(size === 'custom' ? height : size) / (size === 'custom' ? unitFactor(units) : 1)
         if (!(Number.isFinite(boardWidth) && boardWidth > 0 && Number.isFinite(boardHeight) && boardHeight > 0)) { setFormError('Board dimensions must be positive numbers.'); return }
-        updateLayout({ version: 1, game, board: { width: boardWidth, height: boardHeight }, pieces: [] })
+        createLayout({ version: 1, game, board: { width: boardWidth, height: boardHeight }, pieces: [] })
       }}>
         <label>Units<select value={units} onChange={event => {
           const next = event.target.value as Units
