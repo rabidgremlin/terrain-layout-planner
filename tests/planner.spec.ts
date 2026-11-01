@@ -8,16 +8,16 @@ test('create a custom game board, place and move independent terrain, and resume
   await expect(page.getByRole('heading', { name: 'Custom game · 36″ × 36″' })).toBeVisible()
   const board = page.getByRole('region', { name: 'Terrain board' })
   const bounds = (await board.boundingBox())!
-  await page.getByRole('button', { name: 'Building · 6″ × 4″' }).dragTo(board, { targetPosition: { x: 100, y: 100 } })
+  await page.locator('.preview').dragTo(board, { targetPosition: { x: 160, y: 140 } })
   await expect(page.getByText('1 terrain piece')).toBeVisible()
-  // The board is fitted to 720 CSS pixels: 100 pixels equals 5 inches.
+  // A centre grab at (8,7) inches places the 6×4 piece at (5,5).
   await expect(page.getByLabel('Selected terrain')).toContainText('5.0″, 5.0″')
   await page.mouse.move(bounds.x + 120, bounds.y + 120)
   await page.mouse.down()
   await page.mouse.move(bounds.x + 160, bounds.y + 180, { steps: 10 })
   await page.mouse.up()
   await expect(page.getByLabel('Selected terrain')).toContainText('7.0″, 8.0″')
-  await page.getByRole('button', { name: 'Building · 6″ × 4″' }).dragTo(board, { targetPosition: { x: 140, y: 160 } })
+  await page.locator('.preview').dragTo(board, { targetPosition: { x: 200, y: 200 } })
   await expect(page.getByText('2 terrain pieces')).toBeVisible()
   await page.mouse.move(bounds.x + 150, bounds.y + 170)
   await page.mouse.down()

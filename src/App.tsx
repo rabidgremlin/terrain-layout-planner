@@ -15,8 +15,15 @@ function App() {
   const [saved, setSaved] = useState(true)
   const [formError, setFormError] = useState('')
   const boardRef = useRef<HTMLDivElement>(null)
+  const templatePreviewRef = useRef<HTMLSpanElement>(null)
+  const terrainDragRef = useRef<{ x: number; y: number; image: HTMLElement | null } | null>(null)
   const [availableSize, setAvailableSize] = useState({ width: 720, height: 720 })
   const hasLayout = layout !== null
+  function clearTerrainDrag() {
+    terrainDragRef.current?.image?.remove()
+    terrainDragRef.current = null
+  }
+  useEffect(() => () => { terrainDragRef.current?.image?.remove() }, [])
   function updateLayout(next: Layout) {
     setLayout(next)
     setSaved(saveLayout(next))
@@ -58,16 +65,47 @@ function App() {
       </form>
     </section> : <>
       <div className="workspace"><aside><p className="eyebrow">TERRAIN LIBRARY</p><h3>Place your terrain</h3><p>Drag a piece onto the board. Drag it again to adjust its position.</p>
-        <button className="template" draggable onDragStart={event => { event.dataTransfer.setData('text/plain', 'building'); event.dataTransfer.effectAllowed = 'copy' }}><span className="preview" style={{ background: building.colour }} />{building.name} · {building.footprint.width}″ × {building.footprint.height}″</button>
+        <button className="template" draggable onPointerDown={event => {
+          clearTerrainDrag()
+          const bounds = templatePreviewRef.current?.getBoundingClientRect()
+          const insidePreview = bounds && bounds.width > 0 && bounds.height > 0
+            && event.clientX >= bounds.left && event.clientX <= bounds.right
+            && event.clientY >= bounds.top && event.clientY <= bounds.bottom
+          // Capture the initial grab, before the pointer moves past the native drag threshold.
+          terrainDragRef.current = {
+            x: insidePreview ? (event.clientX - bounds.left) / bounds.width : 0.5,
+            y: insidePreview ? (event.clientY - bounds.top) / bounds.height : 0.5,
+            image: null,
+          }
+        }} onPointerUp={clearTerrainDrag} onDragStart={event => {
+          const anchor = terrainDragRef.current ?? { x: 0.5, y: 0.5, image: null }
+          const image = document.createElement('div')
+          const width = building.footprint.width * scale
+          const height = building.footprint.height * scale
+          Object.assign(image.style, {
+            position: 'fixed', left: '-10000px', top: '0', pointerEvents: 'none',
+            width: `${width}px`, height: `${height}px`, boxSizing: 'border-box',
+            background: building.colour, border: '1px solid #63735c',
+          })
+          image.setAttribute('aria-hidden', 'true')
+          document.body.append(image)
+          terrainDragRef.current = { ...anchor, image }
+          event.dataTransfer.setData('text/plain', 'building')
+          event.dataTransfer.effectAllowed = 'copy'
+          event.dataTransfer.setDragImage(image, anchor.x * width, anchor.y * height)
+        }} onDragEnd={clearTerrainDrag}><span ref={templatePreviewRef} className="preview" style={{ background: building.colour }} />{building.name} · {building.footprint.width}″ × {building.footprint.height}″</button>
         <p className="hint">{building.tags.join(' · ')}</p>
         <hr /><h3>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
         <ul className="pieces">{layout.pieces.map((piece, index) => <li key={piece.id}><button aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul>
         <section aria-label="Selected terrain">{selectedPiece ? <><h3>{selectedPiece.name}</h3><p>Position: {selectedPiece.x.toFixed(1)}″, {selectedPiece.y.toFixed(1)}″</p><p>{selectedPiece.footprint.width}″ × {selectedPiece.footprint.height}″</p></> : <p>Select a terrain piece to inspect it.</p>}</section>
       </aside><section className="board-area"><div ref={boardRef} className="board-holder"><div role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
-        if (event.dataTransfer.getData('text/plain') !== 'building') return
+        const anchor = terrainDragRef.current
+        if (event.dataTransfer.getData('text/plain') !== 'building' || !anchor) return
         const bounds = event.currentTarget.getBoundingClientRect()
-        place((event.clientX - bounds.left) / scale, (event.clientY - bounds.top) / scale)
+        place((event.clientX - bounds.left) / scale - anchor.x * building.footprint.width,
+          (event.clientY - bounds.top) / scale - anchor.y * building.footprint.height)
+        clearTerrainDrag()
       }}>
         <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (event.target === event.target.getStage()) setSelected(null) }}>
           <Layer><Rect width={layout.board.width * scale} height={layout.board.height * scale} fill="#e6e9dc" listening={false} />

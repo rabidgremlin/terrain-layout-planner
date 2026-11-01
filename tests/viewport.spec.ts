@@ -36,10 +36,15 @@ test('viewport fitting preserves physical placement, movement, and saved coordin
   await expect.poll(async () => ((await board.boundingBox())!.height)).toBeLessThan(650)
   const bounds = (await board.boundingBox())!
   const scale = bounds.width / 36
-  await page.getByRole('button', { name: 'Building · 6″ × 4″' }).dragTo(board, { targetPosition: { x: 5 * scale, y: 5 * scale } })
-  await expect(page.getByLabel('Selected terrain')).toContainText('5.0″, 5.0″')
+  await page.locator('.preview').dragTo(board, { targetPosition: { x: 8 * scale, y: 7 * scale } })
+  const selected = page.getByLabel('Selected terrain')
+  const initialPosition = await selected.innerText()
+  // Native drag events round CSS-pixel positions on a fractionally scaled board.
+  const initialCoordinates = initialPosition.match(/Position: ([\d.]+)″, ([\d.]+)″/)!
+  expect(Math.abs(Number(initialCoordinates[1]) - 5)).toBeLessThanOrEqual(0.11)
+  expect(Math.abs(Number(initialCoordinates[2]) - 5)).toBeLessThanOrEqual(0.11)
   await page.setViewportSize({ width: 1000, height: 768 })
-  await expect(page.getByLabel('Selected terrain')).toContainText('5.0″, 5.0″')
+  await expect(selected).toHaveText(initialPosition, { useInnerText: true })
   await expect.poll(async () => (await board.boundingBox())!.width).not.toBeCloseTo(bounds.width, 0)
   const resized = (await board.boundingBox())!
   const resizedScale = resized.width / 36
@@ -47,10 +52,13 @@ test('viewport fitting preserves physical placement, movement, and saved coordin
   await page.mouse.down()
   await page.mouse.move(resized.x + 8 * resizedScale, resized.y + 9 * resizedScale, { steps: 10 })
   await page.mouse.up()
-  await expect(page.getByLabel('Selected terrain')).toContainText('7.0″, 8.0″')
+  const movedPosition = await selected.innerText()
+  const movedCoordinates = movedPosition.match(/Position: ([\d.]+)″, ([\d.]+)″/)!
+  expect(Math.abs(Number(movedCoordinates[1]) - 7)).toBeLessThanOrEqual(0.11)
+  expect(Math.abs(Number(movedCoordinates[2]) - 8)).toBeLessThanOrEqual(0.11)
   await page.reload()
   await page.getByRole('button', { name: 'Building 1', exact: true }).click()
-  await expect(page.getByLabel('Selected terrain')).toContainText('7.0″, 8.0″')
+  await expect(selected).toHaveText(movedPosition, { useInnerText: true })
 })
 
 test('a long terrain list scrolls independently of the board', async ({ page }) => {
