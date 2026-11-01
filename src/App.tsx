@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Rect, Line, Transformer } from 'react-konva'
 import Konva from 'konva'
 import { useLayoutHistory } from './history'
@@ -66,16 +66,43 @@ function App() {
     updateLayout({ ...layout, pieces: [...layout.pieces, piece] })
     setSelected(piece.id)
   }
+  const deleteSelectedTerrain = useCallback(() => {
+    if (layout && selectedPiece) updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })
+  }, [layout, selectedPiece, updateLayout])
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!layout || event.defaultPrevented || event.isComposing || event.altKey) return
+      const target = event.target
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select'))) return
+      const key = event.key.toLowerCase()
+      const modifier = event.ctrlKey || event.metaKey
+      let action: (() => void) | undefined
+      if (modifier && key === 'z') {
+        if (event.shiftKey ? canRedo : canUndo) action = event.shiftKey ? redo : undo
+      } else if (event.ctrlKey && !event.metaKey && !event.shiftKey && key === 'y' && canRedo) {
+        action = redo
+      } else if (!modifier && !event.shiftKey && (key === 'delete' || key === 'backspace') && selectedPiece) {
+        action = deleteSelectedTerrain
+      }
+      if (action) { event.preventDefault(); action() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [layout, selectedPiece, canUndo, canRedo, undo, redo, deleteSelectedTerrain])
   return <main className={hasLayout ? 'editor' : undefined}>
     <header>
       <span className="mark" aria-hidden="true">▧</span><h1>Terrain layout planner</h1>
       {layout && <><h2 className="layout-title">{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {measurement(layout.board.width, units)} × {measurement(layout.board.height, units)}</h2><div role="toolbar" aria-label="Terrain editing" className="toolbar">
           <div className="toolbar-group">
-            <button type="button" aria-label="Undo" title="Undo" onClick={undo} disabled={!canUndo}><ToolbarIcon path="M9 4 4 9l5 5 M4 9h10a6 6 0 0 1 0 12" /></button>
-            <button type="button" aria-label="Redo" title="Redo" onClick={redo} disabled={!canRedo}><ToolbarIcon path="m15 4 5 5-5 5 M20 9H10a6 6 0 0 0 0 12" /></button>
-            <button type="button" aria-label="Delete terrain" title="Delete selected terrain" disabled={!selectedPiece} onClick={() => {
-              if (selectedPiece) updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })
-            }}><ToolbarIcon path="M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7" /></button>
+            <button type="button" aria-label="Undo" aria-keyshortcuts="Control+z Meta+z" title="Undo (Ctrl/Cmd+Z)" onClick={undo} disabled={!canUndo}><ToolbarIcon path="M9 4 4 9l5 5 M4 9h10a6 6 0 0 1 0 12" /></button>
+            <button type="button" aria-label="Redo" aria-keyshortcuts="Control+Shift+z Meta+Shift+z Control+y" title="Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)" onClick={redo} disabled={!canRedo}><ToolbarIcon path="m15 4 5 5-5 5 M20 9H10a6 6 0 0 0 0 12" /></button>
+            <button type="button" aria-label="Duplicate terrain" title="Duplicate selected terrain" disabled={!selectedPiece} onClick={() => {
+              if (!selectedPiece) return
+              const copy = structuredClone(selectedPiece)
+              copy.id = crypto.randomUUID(); copy.x = snap(copy.x + grid); copy.y = snap(copy.y + grid)
+              updateLayout({ ...layout, pieces: [...layout.pieces, copy] }); setSelected(copy.id)
+            }}><ToolbarIcon path="M9 9h12v12H9z M5 15H3V3h12v2" /></button>
+            <button type="button" aria-label="Delete terrain" aria-keyshortcuts="Delete Backspace" title="Delete selected terrain (Delete or Backspace)" disabled={!selectedPiece} onClick={deleteSelectedTerrain}><ToolbarIcon path="M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7" /></button>
           </div>
           <div className="toolbar-group">
             <button type="button" aria-label="Show grid" title="Show grid" aria-pressed={showGrid} onClick={() => setShowGrid(!showGrid)}><ToolbarIcon path="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" /></button>
@@ -176,11 +203,7 @@ function App() {
         {selectedPiece && <section className="panel" aria-label="Selected terrain"><p className="eyebrow">SELECTED TERRAIN</p><h3>{selectedPiece.name}</h3><p>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
           <GeometryEditor key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} onApply={editPiece} />
           <p>Drag the round handle above the selected footprint to rotate.</p>
-          <div className="edit-actions"><button onClick={() => {
-            const copy = structuredClone(selectedPiece)
-            copy.id = crypto.randomUUID(); copy.x = snap(copy.x + grid); copy.y = snap(copy.y + grid)
-            updateLayout({ ...layout, pieces: [...layout.pieces, copy] }); setSelected(copy.id)
-          }}>Duplicate terrain</button></div></section>}
+        </section>}
       </aside></div>
     </>}
   </main>

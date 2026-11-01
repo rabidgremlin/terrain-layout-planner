@@ -59,3 +59,70 @@ test('save failures stay visible alongside the compact toolbar', async ({ page }
   expect(bounds.y + bounds.height).toBeLessThanOrEqual(768)
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(1000)
 })
+
+test('duplicate is a toolbar action that requires selected terrain', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Create layout' }).click()
+  const toolbar = page.getByRole('toolbar', { name: 'Terrain editing' })
+  const duplicate = toolbar.getByRole('button', { name: 'Duplicate terrain', exact: true })
+  await expect(duplicate).toBeDisabled()
+  const board = page.getByRole('region', { name: 'Terrain board' })
+  await page.locator('.preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
+  await duplicate.click()
+  await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Building 2', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('Selected terrain').getByRole('button', { name: 'Duplicate terrain' })).toHaveCount(0)
+  const bounds = (await board.boundingBox())!
+  await page.mouse.click(bounds.x + 10, bounds.y + 10)
+  await expect(duplicate).toBeDisabled()
+})
+
+for (const modifier of ['Control', 'Meta']) {
+  test(`${modifier} shortcuts share toolbar history and delete selected terrain`, async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Create layout' }).click()
+    await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+    await page.getByRole('toolbar').getByRole('button', { name: 'Duplicate terrain' }).click()
+    await page.keyboard.press(`${modifier}+z`)
+    await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+    await page.keyboard.press(`${modifier}+Shift+z`)
+    await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+    await page.keyboard.press('Delete')
+    await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+    await page.keyboard.press(`${modifier}+z`)
+    await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+    await page.keyboard.press('Backspace')
+    await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+    if (modifier === 'Control') {
+      await page.keyboard.press('Control+z')
+      await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+      await page.keyboard.press('Control+y')
+      await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+    }
+    await page.reload()
+    await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+  })
+}
+
+test('shortcuts leave focused property and toolbar fields to their native editing', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Create layout' }).click()
+  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByRole('toolbar').getByRole('button', { name: 'Duplicate terrain' }).click()
+  for (const field of ['Terrain width', 'Grid spacing', 'Units']) {
+    await page.getByLabel(field).focus()
+    for (const shortcut of ['Delete', 'Backspace', 'Control+z', 'Meta+z']) {
+      await page.keyboard.press(shortcut)
+      await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+    }
+  }
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await page.getByLabel('Grid spacing').focus()
+  for (const shortcut of ['Control+Shift+z', 'Meta+Shift+z', 'Control+y']) {
+    await page.keyboard.press(shortcut)
+    await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
+  }
+  await page.getByRole('button', { name: 'Building 1', exact: true }).click()
+  await page.keyboard.press('Control+Shift+z')
+  await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
+})

@@ -30,8 +30,7 @@ hr { border: 0; border-top: 1px solid #e0e4d6; margin: 25px 0; }
 [aria-label='Terrain board'] { box-shadow: 0 3px 20px #344b3212; overflow: hidden; }
 .board-caption { margin: 0; font-size: 11px; color: #7a856f; }
 @media(max-width: 800px) { main { padding: 12px; } header { gap: 8px; } h1 { font-size: 14px; } .mark { display: none; } .layout-title { font-size: 13px; padding-left: 8px; } .workspace { grid-template-columns: 160px minmax(0,1fr) 200px; gap: 12px; } }
-.edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.edit-actions button, [aria-label='Selected terrain'] button { border: 1px solid #c7d0bc; border-radius: 4px; background: #f2f3eb; color: #354b38; padding: 7px; font-size: 12px; }
+[aria-label='Selected terrain'] button { border: 1px solid #c7d0bc; border-radius: 4px; background: #f2f3eb; color: #354b38; padding: 7px; font-size: 12px; }
 button:disabled { opacity: .45; cursor: default; }
 aside label { margin: 12px 0; gap: 4px; }
 aside input, aside select { padding: 7px; }

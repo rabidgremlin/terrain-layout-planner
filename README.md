@@ -35,11 +35,16 @@ positions outside the board remain allowed.
 Units change the displayed measurements only. Geometry stays in inches in saved
 layouts; centimetre inputs convert using exactly 2.54 cm per inch. Inputs display
 up to eight decimal places, and unchanged fields retain their stored precision.
-The top toolbar provides undo, redo, delete, units, and grid spacing controls.
+The top toolbar provides undo, redo, duplicate, delete, units, and grid spacing controls.
 The grid icon toggles grid visibility; the magnet icon independently toggles
 snapping. Snapping rounds drops and dragged positions to the nearest spacing
 from the board origin, even when the grid is hidden. Numeric inputs remain exact,
 even with snapping enabled.
+
+Use Ctrl/Cmd+Z to undo, Ctrl/Cmd+Shift+Z or Ctrl+Y to redo, and Delete or
+Backspace to delete selected terrain. These shortcuts leave focused inputs,
+selectors, and editable text to their normal keyboard editing. Toolbar tooltips
+also show the shortcuts.
 
 Duplicate creates an independent piece, offset by one grid spacing. Undo and redo
 cover placement, movement, geometry edits, duplication, and removal. Each gesture
