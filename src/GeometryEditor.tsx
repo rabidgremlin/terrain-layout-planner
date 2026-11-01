@@ -29,6 +29,6 @@ export function GeometryEditor({ piece, units, onApply }: { piece: TerrainPiece;
       ['x', `X position (${units})`], ['y', `Y position (${units})`], ['rotation', 'Rotation (degrees)'],
     ] as const).map(([key, label]) => <label key={key}>{label}<input type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
     {error && <p role="alert">{error}</p>}
-    <button type="submit">Apply geometry</button>
+    <button type="submit">Apply</button>
   </form>
 }

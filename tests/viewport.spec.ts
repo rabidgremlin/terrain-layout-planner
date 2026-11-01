@@ -96,7 +96,7 @@ test('right panels list terrain and show properties only for the selected piece'
   expect(propertiesBounds.x).toBe(listBounds.x)
   expect(propertiesBounds.y).toBeGreaterThanOrEqual(listBounds.y + listBounds.height)
   await properties.getByLabel('Terrain width').fill('9')
-  await properties.getByRole('button', { name: 'Apply geometry' }).click()
+  await properties.getByRole('button', { name: 'Apply', exact: true }).click()
   await page.mouse.click(before.x + 10, before.y + 10)
   await expect(properties).toHaveCount(0)
   await expect(list.getByRole('button', { name: 'Building 1', exact: true })).toBeVisible()
@@ -104,7 +104,7 @@ test('right panels list terrain and show properties only for the selected piece'
   await expect(properties.getByLabel('Terrain width')).toHaveValue('9')
   const after = (await board.boundingBox())!
   expect(after).toEqual(before)
-  await properties.getByRole('button', { name: 'Remove terrain' }).click()
+  await page.getByRole('toolbar', { name: 'Terrain editing' }).getByRole('button', { name: 'Delete terrain' }).click()
   await expect(properties).toHaveCount(0)
   await expect(list.getByText('0 terrain pieces')).toBeVisible()
 })

@@ -9,11 +9,16 @@ import { building, loadLayout, saveLayout } from './planner'
 import type { Game, TerrainPiece } from './planner'
 import './App.css'
 
+function ToolbarIcon({ path }: { path: string }) {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path} /></svg>
+}
+
 function App() {
   const [initial] = useState(loadLayout)
   const { layout, commit: updateLayout, undo, redo, canUndo, canRedo } = useLayoutHistory(initial.layout)
   const [units, setUnits] = useState<Units>('in')
   const [snapping, setSnapping] = useState(false)
+  const [showGrid, setShowGrid] = useState(false)
   const [grid, setGrid] = useState(1)
   const transformerRef = useRef<Konva.Transformer>(null)
   const layerRef = useRef<Konva.Layer>(null)
@@ -64,7 +69,25 @@ function App() {
   return <main className={hasLayout ? 'editor' : undefined}>
     <header>
       <span className="mark" aria-hidden="true">▧</span><h1>Terrain layout planner</h1>
-      {layout && <><h2 className="layout-title">{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {measurement(layout.board.width, units)} × {measurement(layout.board.height, units)}</h2><span role="status">{saved ? 'Saved locally' : 'Could not save — browser storage is unavailable'}</span></>}
+      {layout && <><h2 className="layout-title">{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {measurement(layout.board.width, units)} × {measurement(layout.board.height, units)}</h2><div role="toolbar" aria-label="Terrain editing" className="toolbar">
+          <div className="toolbar-group">
+            <button type="button" aria-label="Undo" title="Undo" onClick={undo} disabled={!canUndo}><ToolbarIcon path="M9 4 4 9l5 5 M4 9h10a6 6 0 0 1 0 12" /></button>
+            <button type="button" aria-label="Redo" title="Redo" onClick={redo} disabled={!canRedo}><ToolbarIcon path="m15 4 5 5-5 5 M20 9H10a6 6 0 0 0 0 12" /></button>
+            <button type="button" aria-label="Delete terrain" title="Delete selected terrain" disabled={!selectedPiece} onClick={() => {
+              if (selectedPiece) updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })
+            }}><ToolbarIcon path="M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7" /></button>
+          </div>
+          <div className="toolbar-group">
+            <button type="button" aria-label="Show grid" title="Show grid" aria-pressed={showGrid} onClick={() => setShowGrid(!showGrid)}><ToolbarIcon path="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" /></button>
+            <button type="button" aria-label="Snap to grid" title="Snap to grid" aria-pressed={snapping} onClick={() => setSnapping(!snapping)}><ToolbarIcon path="M6 3v9a6 6 0 0 0 12 0V3h-4v9a2 2 0 0 1-4 0V3z M6 7h4 M14 7h4" /></button>
+          </div>
+          <label>Units<select value={units} onChange={event => setUnits(event.target.value as Units)}><option value="in">Inches</option><option value="cm">Centimetres</option></select></label>
+          <label>Grid ({units})<input aria-label={`Grid spacing (${units})`} key={units + grid} type="number" min={0.01 * unitFactor(units)} step="any" defaultValue={Number((grid * unitFactor(units)).toFixed(8))} onBlur={event => {
+            const value = Number(event.target.value) / unitFactor(units)
+            if (Number.isFinite(value) && value >= 0.01) setGrid(value)
+            else event.target.value = String(grid * unitFactor(units))
+          }} /></label>
+        </div><span role="status" className={saved ? undefined : 'save-error'}>{saved ? 'Saved locally' : 'Could not save — browser storage is unavailable'}</span></>}
     </header>
     {!layout ? <section className="setup">
       <p className="eyebrow">START A TABLE</p><h2>Your next battlefield</h2><p>Choose your game and the physical size of your board.</p>
@@ -89,15 +112,7 @@ function App() {
         <button className="primary" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="workspace"><aside aria-label="Terrain library and board controls">
-        <div className="edit-actions"><button onClick={undo} disabled={!canUndo}>Undo</button><button onClick={redo} disabled={!canRedo}>Redo</button></div>
-        <label>Units<select value={units} onChange={event => setUnits(event.target.value as Units)}><option value="in">Inches</option><option value="cm">Centimetres</option></select></label>
-        <label className="checkbox"><input type="checkbox" checked={snapping} onChange={event => setSnapping(event.target.checked)} />Snap to grid</label>
-        <label>Grid spacing ({units})<input key={units + grid} type="number" min="0.01" step="any" defaultValue={Number((grid * unitFactor(units)).toFixed(8))} onBlur={event => {
-          const value = Number(event.target.value) / unitFactor(units)
-          if (Number.isFinite(value) && value >= 0.01) setGrid(value)
-          else event.target.value = String(grid * unitFactor(units))
-        }} /></label>
+      <div className="workspace"><aside aria-label="Terrain library">
         <p className="eyebrow">TERRAIN LIBRARY</p><h3>Place your terrain</h3><p>Drag a piece onto the board. Drag it again to adjust its position.</p>
         <button className="template" draggable onPointerDown={event => {
           clearTerrainDrag()
@@ -140,7 +155,7 @@ function App() {
       }}>
         <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (event.target === event.target.getStage()) setSelected(null) }}>
           <Layer ref={layerRef}><Rect width={layout.board.width * scale} height={layout.board.height * scale} fill="#e6e9dc" listening={false} />
-            {snapping && grid * scale >= 8 && <>
+            {showGrid && grid * scale >= 8 && <>
               {Array.from({ length: Math.floor(layout.board.width / grid) }, (_, index) => <Line key={`x-${index}`} points={[(index + 1) * grid * scale, 0, (index + 1) * grid * scale, layout.board.height * scale]} stroke="#cbd3c2" strokeWidth={1} listening={false} />)}
               {Array.from({ length: Math.floor(layout.board.height / grid) }, (_, index) => <Line key={`y-${index}`} points={[0, (index + 1) * grid * scale, layout.board.width * scale, (index + 1) * grid * scale]} stroke="#cbd3c2" strokeWidth={1} listening={false} />)}
             </>}
@@ -165,7 +180,7 @@ function App() {
             const copy = structuredClone(selectedPiece)
             copy.id = crypto.randomUUID(); copy.x = snap(copy.x + grid); copy.y = snap(copy.y + grid)
             updateLayout({ ...layout, pieces: [...layout.pieces, copy] }); setSelected(copy.id)
-          }}>Duplicate terrain</button><button onClick={() => updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })}>Remove terrain</button></div></section>}
+          }}>Duplicate terrain</button></div></section>}
       </aside></div>
     </>}
   </main>
