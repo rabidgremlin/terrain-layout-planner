@@ -89,7 +89,7 @@ function App() {
         <button className="primary" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="workspace"><aside>
+      <div className="workspace"><aside aria-label="Terrain library and board controls">
         <div className="edit-actions"><button onClick={undo} disabled={!canUndo}>Undo</button><button onClick={redo} disabled={!canRedo}>Redo</button></div>
         <label>Units<select value={units} onChange={event => setUnits(event.target.value as Units)}><option value="in">Inches</option><option value="cm">Centimetres</option></select></label>
         <label className="checkbox"><input type="checkbox" checked={snapping} onChange={event => setSnapping(event.target.checked)} />Snap to grid</label>
@@ -129,16 +129,6 @@ function App() {
           event.dataTransfer.setDragImage(image, anchor.x * width, anchor.y * height)
         }} onDragEnd={clearTerrainDrag}><span ref={templatePreviewRef} className="preview" style={{ background: building.colour }} />{building.name} · {measurement(building.footprint.width, units)} × {measurement(building.footprint.height, units)}</button>
         <p className="hint">{building.tags.join(' · ')}</p>
-        <hr /><h3>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
-        <ul className="pieces">{layout.pieces.map((piece, index) => <li key={piece.id}><button aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul>
-        <section aria-label="Selected terrain">{selectedPiece ? <><h3>{selectedPiece.name}</h3><p>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
-          <GeometryEditor key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} onApply={editPiece} />
-          <p>Drag the round handle above the selected footprint to rotate.</p>
-          <div className="edit-actions"><button onClick={() => {
-            const copy = structuredClone(selectedPiece)
-            copy.id = crypto.randomUUID(); copy.x = snap(copy.x + grid); copy.y = snap(copy.y + grid)
-            updateLayout({ ...layout, pieces: [...layout.pieces, copy] }); setSelected(copy.id)
-          }}>Duplicate terrain</button><button onClick={() => updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })}>Remove terrain</button></div></> : <p>Select a terrain piece to inspect it.</p>}</section>
       </aside><section className="board-area"><div ref={boardRef} className="board-holder"><div role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
         const anchor = terrainDragRef.current
@@ -164,7 +154,19 @@ function App() {
             <Transformer ref={transformerRef} resizeEnabled={false} rotateEnabled rotateAnchorOffset={24} />
           </Layer>
         </Stage>
-      </div></div><p className="board-caption">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p></section></div>
+      </div></div><p className="board-caption">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p></section>
+      <aside className={`terrain-panels${selectedPiece ? ' has-selection' : ''}`} aria-label="Terrain panels">
+        <section className="panel" aria-label="Terrain pieces"><p className="eyebrow">ON THE BOARD</p><h3>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
+        <ul className="pieces">{layout.pieces.map((piece, index) => <li key={piece.id}><button aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
+        {selectedPiece && <section className="panel" aria-label="Selected terrain"><p className="eyebrow">SELECTED TERRAIN</p><h3>{selectedPiece.name}</h3><p>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
+          <GeometryEditor key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} onApply={editPiece} />
+          <p>Drag the round handle above the selected footprint to rotate.</p>
+          <div className="edit-actions"><button onClick={() => {
+            const copy = structuredClone(selectedPiece)
+            copy.id = crypto.randomUUID(); copy.x = snap(copy.x + grid); copy.y = snap(copy.y + grid)
+            updateLayout({ ...layout, pieces: [...layout.pieces, copy] }); setSelected(copy.id)
+          }}>Duplicate terrain</button><button onClick={() => updateLayout({ ...layout, pieces: layout.pieces.filter(piece => piece.id !== selectedPiece.id) })}>Remove terrain</button></div></section>}
+      </aside></div>
     </>}
   </main>
 }

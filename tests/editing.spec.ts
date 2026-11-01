@@ -161,5 +161,5 @@ test('centimetre board setup and numeric transforms match the rendered footprint
   await page.mouse.click(bounds.x + 9 * scale, bounds.y + 17 * scale)
   await expect(page.getByLabel('Terrain width')).toHaveValue('8')
   await page.mouse.click(bounds.x + 14 * scale, bounds.y + 11 * scale)
-  await expect(page.getByText('Select a terrain piece to inspect it.')).toBeVisible()
+  await expect(page.getByLabel('Selected terrain')).toHaveCount(0)
 })

@@ -24,8 +24,10 @@ storage. Layouts autosave in the current browser; no account or server is needed
 
 ## Precise terrain editing
 
-Select a terrain piece to enter its width, height, position, and rotation, then
-choose **Apply geometry**. Positions refer to the footprint's local top-left;
+The right-hand terrain list shows the pieces on the board. Select a piece from
+the list or board to open its properties panel below the list; deselecting hides
+the properties panel. Enter its width, height, position, and rotation, then choose
+**Apply geometry**. Positions refer to the footprint's local top-left;
 numeric rotation turns around that origin. The round board handle rotates around
 the footprint's centre and updates its position accordingly. Overlaps and
 positions outside the board remain allowed.
