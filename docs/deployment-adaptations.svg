@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620">
+  <title>Approved deployment adaptations for 36 by 36 inch boards</title>
+  <desc>Six diagrams. Blue is player A, orange player B. These are user-approved application adaptations, not official rulebook diagrams. Grid squares measure six inches.</desc>
+  <defs>
+    <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
+      <path d="M6 0H0V6" fill="none" stroke="#cbd5e1" stroke-width="0.2"/>
+    </pattern>
+    <g id="board">
+      <rect width="36" height="36" fill="#fff"/>
+      <rect width="36" height="36" fill="url(#grid)"/>
+      <rect width="36" height="36" fill="none" stroke="#334155" stroke-width="0.4"/>
+    </g>
+    <style>
+      text { font-family: sans-serif; fill: #0f172a; }
+      .a { fill: #60a5fa; fill-opacity: 0.55; stroke: #2563eb; stroke-width: 0.35; }
+      .b { fill: #fb923c; fill-opacity: 0.55; stroke: #c2410c; stroke-width: 0.35; }
+      .name { font-size: 18px; font-weight: 600; }
+      .note { font-size: 14px; }
+    </style>
+  </defs>
+  <rect width="960" height="620" fill="#f8fafc"/>
+  <text x="30" y="34" font-size="23" font-weight="700">Approved 3′ × 3′ deployments</text>
+  <text x="30" y="60" class="note">Application adaptations · each grid square is 6″ · blue: A · orange: B</text>
+  <g transform="translate(35 100)">
+    <text class="name">1. Frontline</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <rect class="a" width="36" height="6"/>
+      <rect class="b" y="30" width="36" height="6"/>
+    </g>
+    <text y="204" class="note">6″ deep · 24″ central gap</text>
+  </g>
+  <g transform="translate(355 100)">
+    <text class="name">2. Ground War</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <polygon class="a" points="0,0 12,0 12,6 6,6 6,12 0,12"/>
+      <polygon class="b" points="36,36 24,36 24,30 30,30 30,24 36,24"/>
+    </g>
+    <text y="204" class="note">12″ outer legs · 6″ steps</text>
+  </g>
+  <g transform="translate(675 100)">
+    <text class="name">3. Side Battle</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <polygon class="a" points="0,24 21,36 0,36"/>
+      <polygon class="b" points="15,0 36,0 36,12"/>
+    </g>
+    <text y="204" class="note">21″ along edge · 12″ deep</text>
+  </g>
+  <g transform="translate(35 365)">
+    <text class="name">4. Disordered</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <polygon class="a" points="0,0 12,0 0,12"/>
+      <polygon class="a" points="24,0 36,0 36,12"/>
+      <polygon class="b" points="0,24 0,36 12,36"/>
+      <polygon class="b" points="36,24 36,36 24,36"/>
+    </g>
+    <text y="204" class="note">12″ corner triangle legs</text>
+  </g>
+  <g transform="translate(355 365)">
+    <text class="name">5. Spearhead</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <polygon class="a" points="0,0 36,0 18,6"/>
+      <polygon class="b" points="0,36 36,36 18,30"/>
+    </g>
+    <text y="204" class="note">Full edge · 6″ apex depth</text>
+  </g>
+  <g transform="translate(675 365)">
+    <text class="name">6. Opposing Forces</text>
+    <g transform="translate(0 18) scale(4.5)">
+      <use href="#board"/>
+      <rect class="a" width="12" height="6"/>
+      <rect class="b" x="24" y="30" width="12" height="6"/>
+    </g>
+    <text y="204" class="note">12″ wide · 6″ deep</text>
+  </g>
+</svg>
