@@ -15,7 +15,7 @@ function App() {
   const [saved, setSaved] = useState(true)
   const [formError, setFormError] = useState('')
   const boardRef = useRef<HTMLDivElement>(null)
-  const [availableWidth, setAvailableWidth] = useState(720)
+  const [availableSize, setAvailableSize] = useState({ width: 720, height: 720 })
   const hasLayout = layout !== null
   function updateLayout(next: Layout) {
     setLayout(next)
@@ -23,11 +23,11 @@ function App() {
   }
   useEffect(() => {
     if (!hasLayout || !boardRef.current) return
-    const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width))
+    const observer = new ResizeObserver(([entry]) => setAvailableSize({ width: entry.contentRect.width, height: entry.contentRect.height }))
     observer.observe(boardRef.current)
     return () => observer.disconnect()
   }, [hasLayout])
-  const scale = layout ? Math.min(availableWidth / layout.board.width, 720 / layout.board.height) : 1
+  const scale = layout ? Math.min(availableSize.width / layout.board.width, availableSize.height / layout.board.height, 720 / layout.board.width, 720 / layout.board.height) : 1
   const selectedPiece = layout?.pieces.find(piece => piece.id === selected)
   function place(x: number, y: number) {
     if (!layout) return
@@ -35,8 +35,11 @@ function App() {
     updateLayout({ ...layout, pieces: [...layout.pieces, piece] })
     setSelected(piece.id)
   }
-  return <main>
-    <header><span className="mark">▧</span><div><h1>Terrain layout planner</h1><p>Plan the table. Shape the battle.</p></div><span className="local">LOCAL WORKSPACE</span></header>
+  return <main className={hasLayout ? 'editor' : undefined}>
+    <header>
+      <span className="mark" aria-hidden="true">▧</span><h1>Terrain layout planner</h1>
+      {layout && <><h2 className="layout-title">{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {layout.board.width}″ × {layout.board.height}″</h2><span role="status">{saved ? 'Saved locally' : 'Could not save — browser storage is unavailable'}</span></>}
+    </header>
     {!layout ? <section className="setup">
       <p className="eyebrow">START A TABLE</p><h2>Your next battlefield</h2><p>Choose your game and the physical size of your board.</p>
       {initial.warning && <p role="alert">{initial.warning}</p>}
@@ -54,7 +57,6 @@ function App() {
         <button className="primary" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="toolbar"><div><p className="eyebrow">CURRENT LAYOUT</p><h2>{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {layout.board.width}″ × {layout.board.height}″</h2></div><span role="status">{saved ? 'Saved locally' : 'Could not save — browser storage is unavailable'}</span></div>
       <div className="workspace"><aside><p className="eyebrow">TERRAIN LIBRARY</p><h3>Place your terrain</h3><p>Drag a piece onto the board. Drag it again to adjust its position.</p>
         <button className="template" draggable onDragStart={event => { event.dataTransfer.setData('text/plain', 'building'); event.dataTransfer.effectAllowed = 'copy' }}><span className="preview" style={{ background: building.colour }} />{building.name} · {building.footprint.width}″ × {building.footprint.height}″</button>
         <p className="hint">{building.tags.join(' · ')}</p>
