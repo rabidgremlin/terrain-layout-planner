@@ -6,7 +6,6 @@ import { displayNumber, unitFactor } from './measurements'
 import type { Units } from './measurements'
 
 export function TerrainProperties({ piece, units, availableTags, onApply }: { piece: TerrainPiece; units: Units; availableTags: string[]; onApply: (piece: TerrainPiece) => void }) {
-  const circular = piece.footprint.kind === 'circle'
   const factor = unitFactor(units)
   const [values, setValues] = useState({
     width: displayNumber(piece.footprint.width * factor), height: displayNumber(piece.footprint.height * factor),
@@ -38,13 +37,13 @@ export function TerrainProperties({ piece, units, availableTags, onApply }: { pi
     // Preserve the original precision for fields the player has not changed.
     const physical = (key: 'width' | 'height' | 'x' | 'y', original: number) => values[key] === displayNumber(original * factor) ? original : Number(values[key]) / factor
     onApply({ ...piece, colour, visibility, tags, x: physical('x', piece.x), y: physical('y', piece.y), rotation,
-      footprint: { ...piece.footprint, width: physical('width', piece.footprint.width), height: circular ? physical('width', piece.footprint.width) : physical('height', piece.footprint.height) } })
+      footprint: { ...piece.footprint, width: physical('width', piece.footprint.width), height: physical('height', piece.footprint.height) } })
     setError('')
   }}>
     <div className="grid grid-cols-2 gap-x-2">{([
-      ['width', `Terrain ${circular ? 'diameter' : 'width'} (${units})`], ['height', `Terrain height (${units})`],
+      ['width', `Terrain width (${units})`], ['height', `Terrain height (${units})`],
       ['x', `X position (${units})`], ['y', `Y position (${units})`], ['rotation', 'Rotation (degrees)'],
-    ] as const).filter(([key]) => !circular || key !== 'height').map(([key, label]) => <label className="grid gap-1 my-3 text-[13px] font-semibold" key={key}>{label}<input className={`${fieldControl} w-full min-w-0 p-[7px]`} type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
+    ] as const).map(([key, label]) => <label className="grid gap-1 my-3 text-[13px] font-semibold" key={key}>{label}<input className={`${fieldControl} w-full min-w-0 p-[7px]`} type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
     <label className="grid gap-1 my-3 text-[13px] font-semibold">Colour<input className={`${fieldControl} w-full h-9 p-1`} type="color" value={colour} onChange={event => setColour(event.target.value)} /></label>
     <label className="grid gap-1 my-3 text-[13px] font-semibold">Visibility behaviour<select className={`${fieldControl} w-full p-[7px]`} value={visibility} onChange={event => setVisibility(event.target.value as TerrainPiece['visibility'])}>
       <option value="clear">Clear</option><option value="blocking">Blocking</option><option value="dense">Dense</option>

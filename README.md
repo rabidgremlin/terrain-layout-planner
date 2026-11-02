@@ -27,7 +27,8 @@ storage. Layouts autosave in the current browser; no account or server is needed
 The right-hand terrain list shows the pieces on the board. Select a piece from
 the list or board to open its properties panel below the list; deselecting hides
 the properties panel. Enter its width, height, position, and rotation, then choose
-**Apply**. Circular pieces use a single diameter so they remain circular. Positions refer to the footprint's local top-left;
+**Apply**. Oval pieces have independent width and height; equal dimensions make
+a circle. Positions refer to the footprint's local top-left;
 numeric rotation turns around that origin. The round board handle rotates around
 the footprint's centre and updates its position accordingly. Hold Ctrl while
 dragging the rotation handle to snap to the nearest 15 degrees; release Ctrl
@@ -78,9 +79,10 @@ cover compatibility with existing saves and preference/no-op history behaviour.
 
 The terrain library provides buildings, barricades, fields, forests, hills, water,
 lava, rubble, ruins, swamps, mountains, and walls. Drag a template's footprint or
-card onto the board. Circles retain the same local top-left positioning and
-rotation convention as rectangles; their width and height are the same diameter
-in saved layouts. Existing version-1 rectangular layouts remain compatible.
+card onto the board. Ovals retain the same local top-left positioning and
+rotation convention as rectangles and support independent width and height.
+Existing version-1 rectangular and circular layouts remain compatible; legacy
+`circle` footprints load as `ellipse` footprints with their geometry preserved.
 
 Catalog tags follow the supplied Firefight advanced rules v3.6.0, page 11.
 Dimensions, colours, and explicit 2D visibility defaults are planner choices,

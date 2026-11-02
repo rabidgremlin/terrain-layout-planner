@@ -2,7 +2,7 @@ export type Game = 'firefight' | 'custom'
 export type TerrainPiece = {
   id: string
   name: string
-  footprint: { kind: 'rectangle' | 'circle'; width: number; height: number }
+  footprint: { kind: 'rectangle' | 'ellipse'; width: number; height: number }
   x: number
   y: number
   rotation: number
@@ -26,9 +26,8 @@ function isLayout(value: unknown): value is Layout {
   return layout.version === 1 && ['firefight', 'custom'].includes(layout.game)
     && !!layout.board && positive(layout.board.width) && positive(layout.board.height)
     && Array.isArray(layout.pieces) && layout.pieces.every(piece => piece && typeof piece.id === 'string'
-      && typeof piece.name === 'string' && ['rectangle', 'circle'].includes(piece.footprint?.kind)
+      && typeof piece.name === 'string' && ['rectangle', 'ellipse'].includes(piece.footprint?.kind)
       && positive(piece.footprint.width) && positive(piece.footprint.height)
-      && (piece.footprint.kind !== 'circle' || piece.footprint.width === piece.footprint.height)
       && finite(piece.x) && finite(piece.y) && finite(piece.rotation) && typeof piece.colour === 'string'
       && Array.isArray(piece.tags) && piece.tags.every(tag => typeof tag === 'string')
       && ['clear', 'blocking', 'dense'].includes(piece.visibility))
@@ -37,7 +36,13 @@ export function loadLayout(): { layout: Layout | null; warning: string } {
   try {
     const stored = localStorage.getItem(storageKey)
     if (!stored) return { layout: null, warning: '' }
-    const layout: unknown = JSON.parse(stored)
+    // Earlier version-1 layouts used 'circle' for rounded footprints.
+    const layout: unknown = JSON.parse(stored, (key, value: unknown) => {
+      if (key === 'footprint' && value && typeof value === 'object' && 'kind' in value && value.kind === 'circle') {
+        return { ...value, kind: 'ellipse' }
+      }
+      return value
+    })
     if (!isLayout(layout)) throw new Error('Invalid layout')
     return { layout, warning: '' }
   } catch {
