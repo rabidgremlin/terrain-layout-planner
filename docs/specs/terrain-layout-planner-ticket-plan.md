@@ -8,19 +8,33 @@ All 14 tickets are published with the ready-for-agent label, linked as sub-issue
 
 ## Accepted tag-model change (2026-11-02)
 
-[ADR 0002](../adr/0002-derive-los-blocking-from-layout-tags.md) and the updated local
-spec supersede the visibility requirements below. The published ticket bodies
-are historical here and have not been changed on GitHub by this discussion.
-Closed issue #5 remains the record of the original delivered catalog work;
-layout-owned tag rules and Layout settings need new follow-up implementation work.
+The accepted tag redesign is published as
+[Move terrain LOS blocking into layout-owned tags (#20)](https://github.com/rabidgremlin/terrain-layout-planner/issues/20),
+a native sub-issue of the main specification (#2). Its implementation children are:
 
-The follow-up must deliver shared editable tag definitions, membership-derived
-blocking, the Layout settings Tags tab, wall variants, tag lifecycle and one-step
-Save/undo, persistent layout isolation, and the agreed old-data reset. T4/T6 must
-consume the new tag model; T7/T10 must derive blocking coverage/counts from it;
-T11/T12 must use ordinary solid blocking, including Dense and endpoints inside
-blockers. Their implementation tickets must be brought into line before work
-starts. Source-rule quotations remain distinct from the planner's approximation.
+| Issue | Delivers | Blocked by |
+| --- | --- | --- |
+| [#21 — Edit shared tag blocking in Layout settings](https://github.com/rabidgremlin/terrain-layout-planner/issues/21) | Shared definitions, derived blocking, settings dialog, custom creation, persistence/history, and old-data reset | None |
+| [#22 — Rename and delete shared tags safely](https://github.com/rabidgremlin/terrain-layout-planner/issues/22) | Preserved identity, deletion impact, membership/catalog cleanup, and complete undo/redo | #21 |
+| [#23 — Provide scalable and tall wall presets](https://github.com/rabidgremlin/terrain-layout-planner/issues/23) | Distinct scalable and tall walls using layout-owned tag rules | #21 |
+
+All three children carry ready-for-agent. #21 is the initial frontier; #22 and
+#23 can proceed independently after it. No standalone prefactoring slice is needed.
+
+[ADR 0002](../adr/0002-derive-los-blocking-from-layout-tags.md) and the updated local
+spec supersede the historical per-piece visibility criteria below. Closed issue
+#5 remains the record of the original delivered catalog work. The main #2 issue's
+body, title, labels, and open state are preserved; #20 records the approved change.
+
+Existing issues #6, #7, #8, #9, #12, #13, and #14 now reference the accepted model
+and have aligned criteria. #7, #8, #9, and #13 have a native blocker on #21; #12
+and #14 inherit it through their existing #9 and #13 dependencies. #6 remains an
+independent footprint slice and inherits the shared properties model when present.
+Coverage and LOS algorithms remain their existing separate features. Source-rule
+quotations remain distinct from the planner's chosen approximation.
+
+The T1–T14 detail below records the original breakdown; use the live GitHub issues
+and accepted ADR for the updated tag and blocking requirements.
 
 ## Published tickets
 

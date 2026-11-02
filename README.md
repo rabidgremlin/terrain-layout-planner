@@ -80,7 +80,8 @@ cover compatibility with existing saves and preference/no-op history behaviour.
 [ADR 0002](docs/adr/0002-derive-los-blocking-from-layout-tags.md) records the accepted
 next design: layout-owned tag blocking rules managed through a Layout settings
 Tags tab, replacing the current per-piece visibility selector. Implementation is
-pending; the instructions below describe the current application.
+pending and tracked by [the tag redesign parent (#20)](https://github.com/rabidgremlin/terrain-layout-planner/issues/20);
+the instructions below describe the current application.
 
 ## Terrain catalog and properties
 

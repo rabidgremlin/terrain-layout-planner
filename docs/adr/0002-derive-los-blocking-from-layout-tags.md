@@ -22,3 +22,4 @@ Future blocking coverage, piece counts, and terrain-mix recommendations use the 
 
 Use a gear icon labelled Layout settings in the editor toolbar to open a dialog with Tags as its only initial tab. This replaces the previously proposed Manage tags button in the terrain library. The Tags tab provides editable names, Blocks LOS checkboxes, piece-usage counts, Add tag, Delete, Save, and Cancel; new tags start with blocking disabled. Tag creation and definition edits belong in this dialog, while the selected-terrain panel handles memberships and the derived blocking result.
 
+Implementation is tracked by [the tag redesign parent (#20)](https://github.com/rabidgremlin/terrain-layout-planner/issues/20), a sub-issue of the main planner specification (#2), with implementation children #21, #22, and #23.
