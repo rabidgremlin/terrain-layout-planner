@@ -21,7 +21,7 @@ test('toolbar keeps grid visibility independent from snapping and supports rever
   expect((await board.screenshot()).equals(hiddenGrid)).toBe(false)
   await toolbar.getByLabel('Grid spacing').fill('2')
   await toolbar.getByLabel('Grid spacing').press('Tab')
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 157, y: 157 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 157, y: 157 } })
   // A visible grid alone preserves the unsnapped top-left at (7.4667,8.4667).
   await expect.poll(async () => Number(await page.getByLabel('X position').inputValue())).toBeCloseTo(7.4667, 2)
   await expect(remove).toBeEnabled()
@@ -29,7 +29,7 @@ test('toolbar keeps grid visibility independent from snapping and supports rever
   await snap.click()
   await expect(grid).toHaveAttribute('aria-pressed', 'false')
   await expect(snap).toHaveAttribute('aria-pressed', 'true')
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 157, y: 157 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 157, y: 157 } })
   await expect(page.getByLabel('X position')).toHaveValue('8')
   await expect(page.getByLabel('Y position')).toHaveValue('8')
   await toolbar.getByLabel('Units').selectOption('cm')
@@ -67,7 +67,7 @@ test('duplicate is a toolbar action that requires selected terrain', async ({ pa
   const duplicate = toolbar.getByRole('button', { name: 'Duplicate terrain', exact: true })
   await expect(duplicate).toBeDisabled()
   const board = page.getByRole('region', { name: 'Terrain board' })
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
   await duplicate.click()
   await expect(page.getByText('2 terrain pieces', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Building 2', exact: true })).toHaveAttribute('aria-pressed', 'true')
@@ -81,7 +81,7 @@ for (const modifier of ['Control', 'Meta']) {
   test(`${modifier} shortcuts share toolbar history and delete selected terrain`, async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Create layout' }).click()
-    await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+    await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
     await page.getByRole('toolbar').getByRole('button', { name: 'Duplicate terrain' }).click()
     await page.keyboard.press(`${modifier}+z`)
     await expect(page.getByText('1 terrain piece', { exact: true })).toBeVisible()
@@ -107,7 +107,7 @@ for (const modifier of ['Control', 'Meta']) {
 test('shortcuts leave focused property and toolbar fields to their native editing', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
-  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
   await page.getByRole('toolbar').getByRole('button', { name: 'Duplicate terrain' }).click()
   for (const field of ['Terrain width', 'Grid spacing', 'Units']) {
     await page.getByLabel(field).focus()

@@ -5,7 +5,7 @@ test('dropping terrain preserves a quarter-width grab instead of snapping its to
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
   await expect.poll(async () => (await board.boundingBox())!.width).toBe(720)
-  const preview = page.locator('.preview')
+  const preview = page.getByLabel('Building footprint preview')
   const previewBounds = (await preview.boundingBox())!
   const boardBounds = (await board.boundingBox())!
   const start = { x: previewBounds.x + previewBounds.width / 4, y: previewBounds.y + previewBounds.height / 2 }
@@ -33,7 +33,7 @@ for (const height of [900, 720]) {
         return bounds.height > 0 && bounds.y + bounds.height <= height
       }).toBe(true)
       const boardBounds = (await board.boundingBox())!
-      const preview = (await page.locator('.preview').boundingBox())!
+      const preview = (await page.getByLabel('Building footprint preview').boundingBox())!
       const card = (await page.getByRole('button', { name: 'Building · 6″ × 4″' }).boundingBox())!
       const fraction = grab === 'corner' ? 0.9 : 0.5
       const start = grab === 'padding' ? { x: card.x + 4, y: card.y + 4 }

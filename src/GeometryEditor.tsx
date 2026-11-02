@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { fieldControl } from './uiStyles'
 import type { TerrainPiece } from './planner'
 
 import { displayNumber, unitFactor } from './measurements'
@@ -24,11 +25,11 @@ export function GeometryEditor({ piece, units, onApply }: { piece: TerrainPiece;
       footprint: { ...piece.footprint, width: physical('width', piece.footprint.width), height: physical('height', piece.footprint.height) } })
     setError('')
   }}>
-    <div className="geometry-fields">{([
+    <div className="grid grid-cols-2 gap-x-2">{([
       ['width', `Terrain width (${units})`], ['height', `Terrain height (${units})`],
       ['x', `X position (${units})`], ['y', `Y position (${units})`], ['rotation', 'Rotation (degrees)'],
-    ] as const).map(([key, label]) => <label key={key}>{label}<input type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
-    {error && <p role="alert">{error}</p>}
-    <button type="submit">Apply</button>
+    ] as const).map(([key, label]) => <label className="grid gap-1 my-3 text-[13px] font-semibold" key={key}>{label}<input className={`${fieldControl} w-full min-w-0 p-[7px]`} type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
+    {error && <p className="text-[12px] leading-[1.6] text-[#73806b]" role="alert">{error}</p>}
+    <button className="border border-solid border-[#c7d0bc] rounded-sm bg-[#f2f3eb] text-[#354b38] p-[7px] text-[12px]" type="submit">Apply</button>
   </form>
 }

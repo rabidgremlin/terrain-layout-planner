@@ -56,7 +56,7 @@ test('existing saved layouts retain geometry, autosave undo, and reload without 
 test('selection and all editor preferences preserve redo and stay unchanged through history', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
-  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
   await page.getByRole('button', { name: 'Duplicate terrain' }).click()
   await page.getByLabel('Terrain height').fill('6')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
@@ -88,7 +88,7 @@ test('unchanged Apply preserves redo and consumes no undo step, while a new edit
   const undo = page.getByRole('button', { name: 'Undo', exact: true })
   const redo = page.getByRole('button', { name: 'Redo', exact: true })
   await expect(undo).toBeDisabled()
-  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
   await page.getByLabel('Terrain width').fill('8')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
   await undo.click()

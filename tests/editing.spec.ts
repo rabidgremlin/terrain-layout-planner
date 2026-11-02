@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test('exact terrain geometry survives unit changes and reload', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
-  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
   await page.getByLabel('Terrain width').fill('8.5')
   await page.getByLabel('Terrain height').fill('3.25')
   await page.getByLabel('X position').fill('10.125')
@@ -34,7 +34,7 @@ test('one history handles edits, independent duplication, removal, undo, redo, a
   const undo = page.getByRole('button', { name: 'Undo', exact: true })
   const redo = page.getByRole('button', { name: 'Redo', exact: true })
   await expect(undo).toBeDisabled()
-  await page.locator('.preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
   await page.getByLabel('Terrain width').fill('9')
   await page.getByLabel('Rotation (degrees)').fill('45')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
@@ -83,7 +83,7 @@ test('snapping applies to drops and moves; disabled snapping preserves fractiona
   const board = page.getByRole('region', { name: 'Terrain board' })
   const bounds = (await board.boundingBox())!
   const scale = bounds.width / 48
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 10.3 * scale, y: 10.3 * scale } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 10.3 * scale, y: 10.3 * scale } })
   await expect(page.getByLabel('X position')).toHaveValue('8')
   await expect(page.getByLabel('Y position')).toHaveValue('8')
   await page.mouse.move(bounds.x + 9 * scale, bounds.y + 9 * scale)
@@ -112,7 +112,7 @@ test('a visual quarter turn matches numeric geometry and can be undone', async (
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
   const bounds = (await board.boundingBox())!
   // Piece bounds: (180,195) to (270,255); rotation handle at (225,171).
   await page.mouse.move(bounds.x + 225, bounds.y + 171)
@@ -144,7 +144,7 @@ test('centimetre board setup and numeric transforms match the rendered footprint
   await page.getByLabel('Units').selectOption('in')
   await expect(page.getByRole('heading', { name: 'Firefight · 36″ × 36″' })).toBeVisible()
   const board = page.getByRole('region', { name: 'Terrain board' })
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
   await page.getByLabel('Terrain width').fill('0')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('positive')
@@ -169,7 +169,7 @@ test('Ctrl rotation snaps to the nearest 15 degrees and preserves geometry throu
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
   await expect.poll(async () => (await board.boundingBox())!.width).toBe(720)
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
   await page.getByLabel('X position').fill('12')
   await page.getByLabel('Y position').fill('13')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
@@ -201,7 +201,7 @@ test('pressing and releasing Ctrl during a rotation switches live snapping witho
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
   await expect.poll(async () => (await board.boundingBox())!.width).toBe(720)
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 225, y: 225 } })
   await page.getByLabel('X position').fill('12')
   await page.getByLabel('Y position').fill('13')
   await page.getByRole('button', { name: 'Apply', exact: true }).click()

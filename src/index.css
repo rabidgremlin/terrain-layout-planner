@@ -1,6 +1,19 @@
-:root { font-family: 'DM Sans', system-ui, sans-serif; color: #263b31; background: #f4f3ed; font-synthesis: none; }
-* { box-sizing: border-box; }
-body { margin: 0; }
-button, input, select { font: inherit; }
-button { cursor: pointer; }
-button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #b47f36; outline-offset: 3px; }
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Preserve the original inclusive desktop breakpoints. */
+@custom-variant compact (@media (width <= 800px));
+@custom-variant narrow (@media (width <= 1100px));
+
+/* Preflight is intentionally omitted: preserve native controls, UA heading/list
+   margins and weights, and inline SVG/canvas layout from before the migration. */
+@layer base {
+  :root { font-family: 'DM Sans', system-ui, sans-serif; color: #263b31; background: #f4f3ed; font-synthesis: none; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  button, input, select { font: inherit; }
+  button { cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #b47f36; outline-offset: 3px; }
+}

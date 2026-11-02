@@ -36,7 +36,7 @@ test('viewport fitting preserves physical placement, movement, and saved coordin
   await expect.poll(async () => ((await board.boundingBox())!.height)).toBeLessThan(650)
   const bounds = (await board.boundingBox())!
   const scale = bounds.width / 36
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 8 * scale, y: 7 * scale } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 8 * scale, y: 7 * scale } })
   const selected = page.getByLabel('Selected terrain')
   const initialPosition = await selected.innerText()
   // Native drag events round CSS-pixel positions on a fractionally scaled board.
@@ -88,7 +88,7 @@ test('right panels list terrain and show properties only for the selected piece'
   await expect(list).toBeVisible()
   await expect(properties).toHaveCount(0)
   const before = (await board.boundingBox())!
-  await page.locator('.preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
   await expect(properties).toBeVisible()
   const listBounds = (await list.boundingBox())!
   const propertiesBounds = (await properties.boundingBox())!

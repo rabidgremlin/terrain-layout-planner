@@ -1,8 +1,8 @@
 # State and styling migration
 
 Design decisions agreed during the migration interview. The state/history
-migration is implemented; the Tailwind styling conversion remains planned in
-issue #19.
+migration and the Tailwind styling conversion (#19) are implemented.
+Styling guidance and visual regression checks are documented in the root README.
 
 ## Scope
 

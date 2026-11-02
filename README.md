@@ -73,3 +73,31 @@ Storage continues to contain the raw version-1 layout at
 and autosaves layout changes, including undo/redo, through the existing validated
 storage boundary. UI preferences and history are not persisted. Browser tests
 cover compatibility with existing saves and preference/no-op history behaviour.
+
+## Styling
+
+Use Tailwind utilities through `@tailwindcss/vite` for all component styling.
+Keep complete utility names in JSX or shared class strings (`src/uiStyles.ts`);
+do not build utility names from fragments. Use the existing exact colours and
+sizes when extending the interface rather than changing the palette or spacing.
+
+`src/index.css` imports Tailwind's theme and utilities deliberately **without
+Preflight**. This preserves browser heading weights and margins, paragraph/list
+margins, native control appearance, and inline SVG/canvas layout. The small base
+layer owns the page font, colours, box sizing, inherited control fonts, disabled
+buttons, and visible keyboard focus. Component layout and appearance belong in
+utilities; new component selectors and `@apply` rules do not belong in that file.
+Since there is no border reset, directional borders need `border-0` before their
+side-specific width and `border-solid` utilities. The `compact:` and `narrow:`
+variants preserve the original inclusive 800px and 1100px breakpoints.
+
+Inline DOM styles are reserved for runtime board/preview dimensions and terrain
+colours. Konva rendering properties remain in the rendering layer. Keep physical
+geometry, board fitting, and screen-to-board conversion independent of styling.
+
+`tests/appearance.spec.ts` compares 22 screenshots against the pre-migration
+Chromium/Linux appearance at 1280px, 1000px, and 800px: setup, custom fields,
+selected/deselected terrain, toolbar toggles, hover, keyboard focus, and compact
+save-failure feedback. Run `npx playwright test tests/appearance.spec.ts` to
+compare; inspect differences before intentionally updating any baselines. Browser
+rendering can differ across operating systems, so run these baselines on Linux.
