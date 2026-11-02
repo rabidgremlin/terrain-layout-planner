@@ -4,6 +4,11 @@ Design decisions agreed during the migration interview. The state/history
 migration and the Tailwind styling conversion (#19) are implemented.
 Styling guidance and visual regression checks are documented in the root README.
 
+The later [accepted tag-model change](adr/0002-derive-los-blocking-from-layout-tags.md)
+allows resetting old planner saves. The compatibility guarantees below describe
+the completed state/styling migrations, not a requirement to migrate old saves
+into the new tag model.
+
 ## Scope
 
 - Replace shared React state and the custom undo implementation with Zustand

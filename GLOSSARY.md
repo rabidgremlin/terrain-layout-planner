@@ -20,7 +20,7 @@ A reusable terrain design describing a footprint and its properties, available f
 _Avoid_: Layout template
 
 **Terrain tag**:
-A label attached to a terrain piece to describe a property such as cover, blocking, elevation, or danger. A piece may carry multiple tags simultaneously.
+A named property defined within a terrain layout and assigned to terrain pieces and templates. Each tag specifies whether it blocks line of sight, and a piece may carry multiple tags simultaneously.
 
 **Deployment zone**:
 A region of the board designated for initial placement of a player's forces.
@@ -47,8 +47,9 @@ Terrain coverage calculated using only pieces carrying a particular terrain tag.
 **Recommendation**:
 Advisory guidance for a terrain layout; failing to meet it does not prevent editing or saving the layout.
 
-**Visibility behaviour**:
-How a terrain footprint affects top-down line of sight: clear, blocking, or dense. Dense terrain permits sight into or out of its footprint, but not through it to a target beyond.
+**LOS blocking**:
+Obstruction of top-down line of sight by a terrain footprint. Terrain blocks LOS when any of its assigned tags is configured to block it; terrain with no blocking tags does not obstruct LOS.
+_Avoid_: Separate terrain visibility behaviour
 
 **Maximum line of sight**:
 The longest unobstructed straight sight line anywhere on the board under the planner's two-dimensional visibility rules.

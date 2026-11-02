@@ -15,6 +15,22 @@ This document records the agreed design from the design interview. The user conf
 - Initial named game: Grimdark Future: Firefight, using the supplied advanced rulebook v3.6.0 in `refdocs/`. Also include a Custom game mode without game recommendations.
 - Named layouts stored in localStorage, with no login, server components, or server storage.
 
+## Accepted tag and LOS model (2026-11-02)
+
+[ADR 0002](adr/0002-derive-los-blocking-from-layout-tags.md) supersedes the separate
+clear/blocking/dense visibility settings recorded in earlier interview rounds.
+Tag definitions belong to a layout and carry an editable Blocks LOS flag; a piece
+blocks when any assigned tag blocks. Dense is an ordinary blocking tag, including
+for lines starting or ending inside its footprint. This is the planner's chosen
+simplification, not a revision of the Firefight source rules quoted below.
+
+A Layout settings toolbar gear opens a dialog with a Tags tab for tag creation,
+renaming, deletion, blocking rules, and usage counts. Save commits all definition
+changes as one undo step; Cancel discards them. Selected terrain controls tag
+membership and displays the derived result. Scalable and tall walls have separate
+presets. Old planner saves may be reset during implementation; migration is not
+required. See the ADR for the complete accepted behaviour.
+
 ## Terrain dimension terminology
 
 Terrain footprint dimensions are **width × depth**, measured on the playing
@@ -41,7 +57,7 @@ Keep board dimensions, footprints, tags, and visibility rules in application dat
 
 - Export formats are PNG and PDF only. JSON import/export is outside scope.
 - Include a point-to-point LOS ruler and a board-wide search displaying the longest unobstructed straight line. If sampling is used, label its result approximate.
-- Visibility behaviours are clear, blocking, and dense. Game tags supply defaults; colour has no effect on visibility.
+- The original clear/blocking/dense visibility decision is superseded by ADR 0002; colour still has no effect on visibility.
 - Clarified in round 3: terrain templates remain in scope; premade layout templates are outside scope. Physical inventory tracking has not been requested.
 - Users must be able to save layouts, select from a list, name and rename, delete, and duplicate layouts.
 
@@ -58,7 +74,7 @@ Keep board dimensions, footprints, tags, and visibility rules in application dat
 ## Decisions from interview round 4
 
 - Placed pieces are independent of their source template; changes to a template do not alter saved layouts. A piece can explicitly be saved as a new template. Custom templates support naming, editing, duplication, and deletion.
-- Tags are user-defined. Each piece has an explicit visibility behaviour: clear, blocking, or dense. Premade pieces supply defaults, which users may override. Blocking wins in overlapping footprints.
+- This round originally assigned clear/blocking/dense visibility to each piece. ADR 0002 supersedes that choice with layout-owned tag blocking; the original source research remains unchanged.
 - The user requested official-source web research into other games' LOS and terrain models before finalising future extensibility. Initial visibility behaviour is accepted as a starting point, not an assertion that it represents every game faithfully.
 - When board dimensions change, keep terrain pieces at their existing board coordinates and physical sizes; the user can reposition them. This supersedes the earlier proposal to preserve positions relative to the board centre. Off-board portions are excluded from coverage and exports, and affected pieces are flagged.
 - Include a Custom game mode without game recommendations.
@@ -94,6 +110,6 @@ Game recommendation checks must distinguish terrain piece counts from geometric 
 
 - The user approved the 3-foot deployment outlines and React/Konva architecture and confirmed the shared understanding.
 - A terrain piece may carry multiple tags simultaneously. For example, a forest tagged Cover, Difficult, and Dense contributes to all three per-tag coverage figures and all three applicable tag piece counts, but contributes only once to total terrain coverage and total terrain piece count.
-- Multiple tags remain distinct from the single explicit visibility behaviour. Premade pieces provide coherent defaults, and users may override them.
+- The original decision kept multiple tags distinct from a single explicit visibility behaviour. The core direction agreed on 2026-11-02 supersedes that decision with blocking derived from tag definitions shared within a layout; see [the accepted tag-blocking ADR](adr/0002-derive-los-blocking-from-layout-tags.md) for the complete accepted model.
 
 Implementation details such as numerical tolerances and maximum-LOS sampling resolution should be documented during implementation. They must preserve the agreed footprint semantics and avoid presenting sampled results as exact.

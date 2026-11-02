@@ -6,6 +6,22 @@ Each ticket is a demoable vertical slice, including user-facing behaviour, appli
 
 All 14 tickets are published with the ready-for-agent label, linked as sub-issues of #2, and connected by 19 native blocking relationships. Verified all issue bodies against the approved criteria (91 total), all labels and relationships, and preservation of the parent spec's title, body, status, and labels.
 
+## Accepted tag-model change (2026-11-02)
+
+[ADR 0002](../adr/0002-derive-los-blocking-from-layout-tags.md) and the updated local
+spec supersede the visibility requirements below. The published ticket bodies
+are historical here and have not been changed on GitHub by this discussion.
+Closed issue #5 remains the record of the original delivered catalog work;
+layout-owned tag rules and Layout settings need new follow-up implementation work.
+
+The follow-up must deliver shared editable tag definitions, membership-derived
+blocking, the Layout settings Tags tab, wall variants, tag lifecycle and one-step
+Save/undo, persistent layout isolation, and the agreed old-data reset. T4/T6 must
+consume the new tag model; T7/T10 must derive blocking coverage/counts from it;
+T11/T12 must use ordinary solid blocking, including Dense and endpoints inside
+blockers. Their implementation tickets must be brought into line before work
+starts. Source-rule quotations remain distinct from the planner's approximation.
+
 ## Published tickets
 
 | Plan | GitHub issue | Blocked by |

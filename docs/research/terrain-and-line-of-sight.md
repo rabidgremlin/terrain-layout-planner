@@ -2,6 +2,12 @@
 
 Research checked 1 November 2026. These examples explain future modelling needs; they do not expand the first release beyond its agreed Firefight planning approximation.
 
+The design recommendations below predate [ADR 0002](../adr/0002-derive-los-blocking-from-layout-tags.md).
+The accepted planner model now derives blocking from tags shared within each
+layout and treats Dense as an ordinary blocker. The sourced findings remain
+unchanged; the earlier recommendation to retain three visibility behaviours is
+superseded by that deliberate planning simplification.
+
 ## Source scope
 
 - **Warhammer 40,000, 11th edition:** official terrain overview dated **8 April 2026**. The publisher's **1 June 2026** announcement identifies the new rules as 11th edition. Findings below come from the overview, not a verified reading of the core PDF: the web reader rejected its 32 MB download. They therefore illustrate the announced design, rather than establish the complete current rules or subsequent errata. [Terrain overview](https://www.warhammer-community.com/en-gb/articles/xlppkx5s/new40k-take-cover-with-updated-terrain-rules/), [edition announcement](https://www.warhammer-community.com/en-gb/articles/nhqt9wx3/new40k-rules-download-the-free-core-rules-now/).

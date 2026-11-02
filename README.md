@@ -75,6 +75,13 @@ and autosaves layout changes, including undo/redo, through the existing validate
 storage boundary. UI preferences and history are not persisted. Browser tests
 cover compatibility with existing saves and preference/no-op history behaviour.
 
+## Accepted tag-model redesign
+
+[ADR 0002](docs/adr/0002-derive-los-blocking-from-layout-tags.md) records the accepted
+next design: layout-owned tag blocking rules managed through a Layout settings
+Tags tab, replacing the current per-piece visibility selector. Implementation is
+pending; the instructions below describe the current application.
+
 ## Terrain catalog and properties
 
 The terrain library provides buildings, barricades, fields, forests, hills, water,
