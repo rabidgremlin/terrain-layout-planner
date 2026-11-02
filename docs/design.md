@@ -15,6 +15,13 @@ This document records the agreed design from the design interview. The user conf
 - Initial named game: Grimdark Future: Firefight, using the supplied advanced rulebook v3.6.0 in `refdocs/`. Also include a Custom game mode without game recommendations.
 - Named layouts stored in localStorage, with no login, server components, or server storage.
 
+## Terrain dimension terminology
+
+Terrain footprint dimensions are **width × depth**, measured on the playing
+surface before rotation. Terrain height refers to vertical extent above the
+board and is outside the current 2D model. This terminology applies to pieces
+and templates; the custom board setup retains its Width/Height labels.
+
 ## Agreed architecture
 
 Use React and Konva for editing and rendering. Konva's [React bindings](https://konvajs.org/docs/react/index.html) expose interactive shapes and [canvas image export](https://konvajs.org/docs/react/Canvas_Export.html), which fit the agreed editor and PNG output.

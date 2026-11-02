@@ -28,6 +28,16 @@ A region of the board designated for initial placement of a player's forces.
 **Terrain footprint**:
 The two-dimensional area occupied by a terrain piece when viewed from above.
 
+**Terrain width**:
+The side-to-side dimension of a terrain footprint on the playing surface, measured before rotation.
+
+**Terrain depth**:
+The front-to-back dimension of a terrain footprint on the playing surface, perpendicular to its width and measured before rotation.
+_Avoid_: Terrain height (for footprint size)
+
+**Terrain height**:
+The vertical extent of physical terrain above the playing surface, distinct from its footprint dimensions.
+
 **Terrain coverage**:
 The proportion of the board occupied by at least one terrain footprint, with overlapping areas counted once and areas outside the board excluded.
 

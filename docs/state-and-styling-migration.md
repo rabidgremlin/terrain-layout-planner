@@ -41,7 +41,9 @@ Styling guidance and visual regression checks are documented in the root README.
   return the user to setup.
 - Existing localStorage layouts retain their physical geometry and remain
   readable. Preserve the existing storage key, serialized layout format,
-  validation, and visible storage-failure feedback.
+  validation, and visible storage-failure feedback. The later terrain terminology
+  update writes footprint `depth`, normalizing legacy footprint `height` on load;
+  board and rendering heights keep their existing meaning.
 - Autosave the current layout after edits, undo, and redo. History, selection,
   and editor preferences remain session-only and reset on reload.
 - Keep existing draft-reset behaviour when the selected piece or units change.

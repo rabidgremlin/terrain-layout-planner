@@ -156,7 +156,7 @@ function App() {
         if (event.dataTransfer.getData('text/plain') !== anchor?.template.name || !anchor) return
         const bounds = event.currentTarget.getBoundingClientRect()
         place(anchor.template, (event.clientX - bounds.left) / scale - anchor.x * anchor.template.footprint.width,
-          (event.clientY - bounds.top) / scale - anchor.y * anchor.template.footprint.height)
+          (event.clientY - bounds.top) / scale - anchor.y * anchor.template.footprint.depth)
         clearTerrainDrag(terrainDragRef)
       }}>
         <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (event.target === event.target.getStage()) setSelected(null) }}>
@@ -169,7 +169,7 @@ function App() {
               const oval = piece.footprint.kind === 'ellipse'
               const Footprint = oval ? Ellipse : Rect
               // Ellipse is centre-based; retain the same local top-left origin as rectangles.
-              return <Footprint offsetX={oval ? -piece.footprint.width * scale / 2 : 0} offsetY={oval ? -piece.footprint.height * scale / 2 : 0} id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.height * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} draggable dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
+              return <Footprint offsetX={oval ? -piece.footprint.width * scale / 2 : 0} offsetY={oval ? -piece.footprint.depth * scale / 2 : 0} id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.depth * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} draggable dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
               editPiece({ ...piece, x: event.target.x() / scale, y: event.target.y() / scale, rotation: event.target.rotation() })
             }} onMouseDown={() => setSelected(piece.id)} onDragStart={() => setSelected(piece.id)} onDragEnd={event => {
               const x = snap(event.target.x() / scale), y = snap(event.target.y() / scale)

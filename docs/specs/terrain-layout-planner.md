@@ -24,7 +24,7 @@ Show total terrain coverage, coverage and piece counts by tag, advisory Firefigh
 10. As a wargame player, I want to drag a terrain template onto the board, so that I can place a terrain piece where I intend.
 11. As a wargame player, I want to place multiple pieces from the same terrain template, so that I can represent repeated terrain features.
 12. As a wargame player, I want to select and move a terrain piece, so that I can refine the arrangement.
-13. As a wargame player, I want to enter exact terrain dimensions, so that the plan matches physical terrain.
+13. As a wargame player, I want to enter exact terrain width and depth, so that the plan matches physical terrain.
 14. As a wargame player, I want to rotate terrain visually and by a numeric angle, so that I can reproduce its orientation.
 15. As a wargame player, I want to duplicate a terrain piece within a layout, so that I can add another matching feature quickly.
 16. As a wargame player, I want to remove a terrain piece, so that I can revise my layout.
@@ -83,7 +83,7 @@ Show total terrain coverage, coverage and piece counts by tag, advisory Firefigh
 ## Implementation Decisions
 
 - **Application architecture:** extend the existing React, TypeScript, and Vite application, replacing the generated starter screen. Use Konva through React for the interactive board. Keep physical board data and game logic independent of the rendering scene graph and screen pixels.
-- **Planner state:** represent layouts, terrain templates, placed pieces, multi-tag memberships, board dimensions, selected game and deployment, and explicit visibility behaviour as application data. Use a consistent physical coordinate system and convert display units without changing physical values. Persist domain data rather than serialized Konva nodes.
+- **Planner state:** use width and depth for terrain footprint dimensions, reserving terrain height for vertical extent above the board; custom board setup retains Width/Height. Represent layouts, terrain templates, placed pieces, multi-tag memberships, board dimensions, selected game and deployment, and explicit visibility behaviour as application data. Use a consistent physical coordinate system and convert display units without changing physical values. Persist domain data rather than serialized Konva nodes.
 - **Editing and history:** coordinate board editing, selection, movement, rotation, dimensional edits, footprint creation, per-piece properties, duplication, and removal through the planner state. Support rectangles, circles, and editable polygons, with optional grid snapping and undo/redo. Selection handles and editor controls are not terrain and must not affect analysis or exported board imagery.
 - **Terrain templates and pieces:** provide a premade sidebar catalog and a locally persisted custom terrain library. Instantiating a template produces an independent piece with its own footprint and properties. Template changes and deletion must not propagate into existing layouts. Saving a piece as a template is explicit. Premade layout templates and physical inventory limits are not required.
 - **Multiple tags:** every piece and terrain template supports multiple simultaneous tags, not a mutually exclusive terrain category. A Cover + Difficult + Dense forest belongs to all three tag sets. Tags remain descriptive and independent of colour; the piece also has one explicit visibility behaviour. Premade defaults provide coherent tags and behaviour, and users can override them.

@@ -8,7 +8,7 @@ import type { Units } from './measurements'
 export function TerrainProperties({ piece, units, availableTags, onApply }: { piece: TerrainPiece; units: Units; availableTags: string[]; onApply: (piece: TerrainPiece) => void }) {
   const factor = unitFactor(units)
   const [values, setValues] = useState({
-    width: displayNumber(piece.footprint.width * factor), height: displayNumber(piece.footprint.height * factor),
+    width: displayNumber(piece.footprint.width * factor), depth: displayNumber(piece.footprint.depth * factor),
     x: displayNumber(piece.x * factor), y: displayNumber(piece.y * factor), rotation: displayNumber(piece.rotation),
   })
   const [colour, setColour] = useState(piece.colour)
@@ -29,19 +29,19 @@ export function TerrainProperties({ piece, units, availableTags, onApply }: { pi
   }
   return <form onSubmit={event => {
     event.preventDefault()
-    const width = Number(values.width) / factor, height = Number(values.height) / factor
+    const width = Number(values.width) / factor, depth = Number(values.depth) / factor
     const x = Number(values.x) / factor, y = Number(values.y) / factor, rotation = Number(values.rotation)
-    if (![width, height, x, y, rotation].every(Number.isFinite) || width <= 0 || height <= 0) {
+    if (![width, depth, x, y, rotation].every(Number.isFinite) || width <= 0 || depth <= 0) {
       setError('Terrain dimensions must be positive and geometry must contain finite numbers.'); return
     }
     // Preserve the original precision for fields the player has not changed.
-    const physical = (key: 'width' | 'height' | 'x' | 'y', original: number) => values[key] === displayNumber(original * factor) ? original : Number(values[key]) / factor
+    const physical = (key: 'width' | 'depth' | 'x' | 'y', original: number) => values[key] === displayNumber(original * factor) ? original : Number(values[key]) / factor
     onApply({ ...piece, colour, visibility, tags, x: physical('x', piece.x), y: physical('y', piece.y), rotation,
-      footprint: { ...piece.footprint, width: physical('width', piece.footprint.width), height: physical('height', piece.footprint.height) } })
+      footprint: { ...piece.footprint, width: physical('width', piece.footprint.width), depth: physical('depth', piece.footprint.depth) } })
     setError('')
   }}>
     <div className="grid grid-cols-2 gap-x-2">{([
-      ['width', `Terrain width (${units})`], ['height', `Terrain height (${units})`],
+      ['width', `Terrain width (${units})`], ['depth', `Terrain depth (${units})`],
       ['x', `X position (${units})`], ['y', `Y position (${units})`], ['rotation', 'Rotation (degrees)'],
     ] as const).map(([key, label]) => <label className="grid gap-1 my-3 text-[13px] font-semibold" key={key}>{label}<input className={`${fieldControl} w-full min-w-0 p-[7px]`} type="number" step="any" required value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
     <label className="grid gap-1 my-3 text-[13px] font-semibold">Colour<input className={`${fieldControl} w-full h-9 p-1`} type="color" value={colour} onChange={event => setColour(event.target.value)} /></label>

@@ -2,7 +2,7 @@ export type Game = 'firefight' | 'custom'
 export type TerrainPiece = {
   id: string
   name: string
-  footprint: { kind: 'rectangle' | 'ellipse'; width: number; height: number }
+  footprint: { kind: 'rectangle' | 'ellipse'; width: number; depth: number }
   x: number
   y: number
   rotation: number
@@ -27,7 +27,7 @@ function isLayout(value: unknown): value is Layout {
     && !!layout.board && positive(layout.board.width) && positive(layout.board.height)
     && Array.isArray(layout.pieces) && layout.pieces.every(piece => piece && typeof piece.id === 'string'
       && typeof piece.name === 'string' && ['rectangle', 'ellipse'].includes(piece.footprint?.kind)
-      && positive(piece.footprint.width) && positive(piece.footprint.height)
+      && positive(piece.footprint.width) && positive(piece.footprint.depth)
       && finite(piece.x) && finite(piece.y) && finite(piece.rotation) && typeof piece.colour === 'string'
       && Array.isArray(piece.tags) && piece.tags.every(tag => typeof tag === 'string')
       && ['clear', 'blocking', 'dense'].includes(piece.visibility))
@@ -36,12 +36,12 @@ export function loadLayout(): { layout: Layout | null; warning: string } {
   try {
     const stored = localStorage.getItem(storageKey)
     if (!stored) return { layout: null, warning: '' }
-    // Earlier version-1 layouts used 'circle' for rounded footprints.
+    // Normalize legacy footprint names before validating; board height stays unchanged.
     const layout: unknown = JSON.parse(stored, (key, value: unknown) => {
-      if (key === 'footprint' && value && typeof value === 'object' && 'kind' in value && value.kind === 'circle') {
-        return { ...value, kind: 'ellipse' }
-      }
-      return value
+      if (key !== 'footprint' || !value || typeof value !== 'object') return value
+      const { height, depth, ...footprint } = value as Record<string, unknown>
+      return { ...footprint, depth: 'depth' in value ? depth : height,
+        kind: footprint.kind === 'circle' ? 'ellipse' : footprint.kind }
     })
     if (!isLayout(layout)) throw new Error('Invalid layout')
     return { layout, warning: '' }

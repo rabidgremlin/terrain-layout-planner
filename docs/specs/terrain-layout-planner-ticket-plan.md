@@ -50,7 +50,7 @@ The initial frontier is #3. Work the frontier as blockers close; these relations
 
 **Acceptance criteria:**
 
-- Support exact physical terrain dimensions and visual and numeric rotation, keeping rendering and stored geometry consistent.
+- Support exact physical terrain width and depth and visual and numeric rotation, keeping rendering and stored geometry consistent.
 - Switch between inches and centimetres without changing physical dimensions or positions.
 - Provide optional grid snapping for placement and movement, and preserve unsnapped positioning when disabled.
 - Duplicate and remove selected terrain pieces; duplicates are independent.

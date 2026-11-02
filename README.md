@@ -26,8 +26,8 @@ storage. Layouts autosave in the current browser; no account or server is needed
 
 The right-hand terrain list shows the pieces on the board. Select a piece from
 the list or board to open its properties panel below the list; deselecting hides
-the properties panel. Enter its width, height, position, and rotation, then choose
-**Apply**. Oval pieces have independent width and height; equal dimensions make
+the properties panel. Enter its width, depth, position, and rotation, then choose
+**Apply**. Oval pieces have independent width and depth; equal dimensions make
 a circle. Positions refer to the footprint's local top-left;
 numeric rotation turns around that origin. The round board handle rotates around
 the footprint's centre and updates its position accordingly. Hold Ctrl while
@@ -80,9 +80,16 @@ cover compatibility with existing saves and preference/no-op history behaviour.
 The terrain library provides buildings, barricades, fields, forests, hills, water,
 lava, rubble, ruins, swamps, mountains, and walls. Drag a template's footprint or
 card onto the board. Ovals retain the same local top-left positioning and
-rotation convention as rectangles and support independent width and height.
+rotation convention as rectangles and support independent width and depth.
 Existing version-1 rectangular and circular layouts remain compatible; legacy
 `circle` footprints load as `ellipse` footprints with their geometry preserved.
+Terrain size pairs are width × depth; height means vertical extent above the board
+and is not currently modelled. Custom board setup continues to use Width/Height.
+
+Saved footprints now use `depth`. Legacy footprint `height` loads as `depth` when
+`depth` is absent; if both exist, `depth` takes precedence and must be valid. Saves
+write only `depth` for terrain footprints, keeping the existing storage key and
+version. DOM and Konva dimensions still use `height` for rendering.
 
 Catalog tags follow the supplied Firefight advanced rules v3.6.0, page 11.
 Dimensions, colours, and explicit 2D visibility defaults are planner choices,
@@ -130,5 +137,7 @@ Chromium/Linux appearance at 1280px, 1000px, and 800px: setup, custom fields,
 selected/deselected terrain, toolbar toggles, hover, keyboard focus, and compact
 save-failure feedback. The original Tailwind migration baselines were updated
 for the expanded catalog and properties controls in #5. Run `npx playwright test tests/appearance.spec.ts` to
-compare; inspect differences before intentionally updating any baselines. Browser
+compare; inspect differences before intentionally updating any baselines. A small
+colour tolerance ignores antialiased border rounding; no differing pixels beyond
+that tolerance are allowed. Browser
 rendering can differ across operating systems, so run these baselines on Linux.
