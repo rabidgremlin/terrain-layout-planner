@@ -2,7 +2,7 @@ export type Game = 'firefight' | 'custom'
 export type TerrainPiece = {
   id: string
   name: string
-  footprint: { kind: 'rectangle'; width: number; height: number }
+  footprint: { kind: 'rectangle' | 'circle'; width: number; height: number }
   x: number
   y: number
   rotation: number
@@ -16,10 +16,7 @@ export type Layout = {
   board: { width: number; height: number }
   pieces: TerrainPiece[]
 }
-export const building: Omit<TerrainPiece, 'id' | 'x' | 'y'> = {
-  name: 'Building', footprint: { kind: 'rectangle', width: 6, height: 4 },
-  rotation: 0, colour: '#a8b89c', tags: ['Impassable', 'Sight Blocking'], visibility: 'blocking',
-}
+export type TerrainTemplate = Omit<TerrainPiece, 'id' | 'x' | 'y'>
 const storageKey = 'terrain-planner.current-layout.v1'
 const positive = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
@@ -29,8 +26,9 @@ function isLayout(value: unknown): value is Layout {
   return layout.version === 1 && ['firefight', 'custom'].includes(layout.game)
     && !!layout.board && positive(layout.board.width) && positive(layout.board.height)
     && Array.isArray(layout.pieces) && layout.pieces.every(piece => piece && typeof piece.id === 'string'
-      && typeof piece.name === 'string' && piece.footprint?.kind === 'rectangle'
+      && typeof piece.name === 'string' && ['rectangle', 'circle'].includes(piece.footprint?.kind)
       && positive(piece.footprint.width) && positive(piece.footprint.height)
+      && (piece.footprint.kind !== 'circle' || piece.footprint.width === piece.footprint.height)
       && finite(piece.x) && finite(piece.y) && finite(piece.rotation) && typeof piece.colour === 'string'
       && Array.isArray(piece.tags) && piece.tags.every(tag => typeof tag === 'string')
       && ['clear', 'blocking', 'dense'].includes(piece.visibility))

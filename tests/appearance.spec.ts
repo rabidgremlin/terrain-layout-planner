@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.use({ locale: 'en-US', colorScheme: 'light' })
 
-// Captured from the handwritten styles before the Tailwind migration.
+// Baselines originate from the Tailwind migration and include the expanded terrain catalog.
 for (const width of [1280, 1000, 800]) {
   test(`planner appearance at desktop width ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })

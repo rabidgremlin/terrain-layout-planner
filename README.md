@@ -27,7 +27,7 @@ storage. Layouts autosave in the current browser; no account or server is needed
 The right-hand terrain list shows the pieces on the board. Select a piece from
 the list or board to open its properties panel below the list; deselecting hides
 the properties panel. Enter its width, height, position, and rotation, then choose
-**Apply**. Positions refer to the footprint's local top-left;
+**Apply**. Circular pieces use a single diameter so they remain circular. Positions refer to the footprint's local top-left;
 numeric rotation turns around that origin. The round board handle rotates around
 the footprint's centre and updates its position accordingly. Hold Ctrl while
 dragging the rotation handle to snap to the nearest 15 degrees; release Ctrl
@@ -74,6 +74,34 @@ and autosaves layout changes, including undo/redo, through the existing validate
 storage boundary. UI preferences and history are not persisted. Browser tests
 cover compatibility with existing saves and preference/no-op history behaviour.
 
+## Terrain catalog and properties
+
+The terrain library provides buildings, barricades, fields, forests, hills, water,
+lava, rubble, ruins, swamps, mountains, and walls. Drag a template's footprint or
+card onto the board. Circles retain the same local top-left positioning and
+rotation convention as rectangles; their width and height are the same diameter
+in saved layouts. Existing version-1 rectangular layouts remain compatible.
+
+Catalog tags follow the supplied Firefight advanced rules v3.6.0, page 11.
+Dimensions, colours, and explicit 2D visibility defaults are planner choices,
+not prescribed terrain sizes or a substitute for agreeing terrain rules.
+Water defaults to a shallow lake (Difficult); walls default to Blocking visibility
+and Climbable. Buildings and mountains default to Blocking, forests to Dense,
+and the other choices to Clear. All pieces allow overrides.
+
+Select a placed piece to edit its colour, visibility behaviour, and any number of
+tags along with its geometry, then choose **Apply**. Use **New tag** and **Add tag**
+(or Enter) to add a custom tag to the draft. Names are trimmed; existing names are
+reused without regard to case. Applied tags are available for reuse on other
+pieces in the same layout. Check or uncheck tags to change membership. Tags and
+colour never determine visibility; only the explicit Clear/Blocking/Dense
+setting does. Dense permits sight into or out of a footprint, but not through it.
+These settings describe a 2D planning approximation, not miniature-eye-level LOS.
+
+Each Apply is one shared undo/redo step and autosaves all piece properties.
+Editing a placement or duplicate leaves other pieces and the catalog unchanged.
+Draft changes remain local until Apply and reset when selection or units change.
+
 ## Styling
 
 Use Tailwind utilities through `@tailwindcss/vite` for all component styling.
@@ -95,9 +123,10 @@ Inline DOM styles are reserved for runtime board/preview dimensions and terrain
 colours. Konva rendering properties remain in the rendering layer. Keep physical
 geometry, board fitting, and screen-to-board conversion independent of styling.
 
-`tests/appearance.spec.ts` compares 22 screenshots against the pre-migration
+`tests/appearance.spec.ts` compares 22 screenshots against the approved
 Chromium/Linux appearance at 1280px, 1000px, and 800px: setup, custom fields,
 selected/deselected terrain, toolbar toggles, hover, keyboard focus, and compact
-save-failure feedback. Run `npx playwright test tests/appearance.spec.ts` to
+save-failure feedback. The original Tailwind migration baselines were updated
+for the expanded catalog and properties controls in #5. Run `npx playwright test tests/appearance.spec.ts` to
 compare; inspect differences before intentionally updating any baselines. Browser
 rendering can differ across operating systems, so run these baselines on Linux.

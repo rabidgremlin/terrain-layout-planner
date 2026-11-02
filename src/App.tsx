@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Stage, Layer, Rect, Line, Transformer } from 'react-konva'
+import { Stage, Layer, Rect, Ellipse, Line, Transformer } from 'react-konva'
 import Konva from 'konva'
 import { useStore } from 'zustand'
 import { useEditorStore } from './editorStore'
-import { GeometryEditor } from './GeometryEditor'
+import { TerrainProperties } from './TerrainProperties'
+import { terrainCatalog } from './terrainCatalog'
 import { measurement, unitFactor } from './measurements'
 import type { Units } from './measurements'
-import { building } from './planner'
-import type { Game, TerrainPiece } from './planner'
+import { TerrainLibrary } from './TerrainLibrary'
+import { clearTerrainDrag } from './terrainDrag'
+import type { TerrainDragRef } from './terrainDrag'
+import type { Game, TerrainPiece, TerrainTemplate } from './planner'
 import { fieldControl, setupLabel } from './uiStyles'
 
 const toolbarButton = 'grid place-items-center size-8 p-0 border border-solid border-transparent rounded-[5px] bg-transparent text-[#465c42] enabled:hover:bg-[#e9eddf] aria-pressed:border-[#90a587] aria-pressed:bg-[#dce6d2] aria-pressed:text-[#285849]'
@@ -41,15 +44,9 @@ function App() {
   const [height, setHeight] = useState('48')
   const [formError, setFormError] = useState('')
   const boardRef = useRef<HTMLDivElement>(null)
-  const templatePreviewRef = useRef<HTMLSpanElement>(null)
-  const terrainDragRef = useRef<{ x: number; y: number; image: HTMLElement | null } | null>(null)
+  const terrainDragRef: TerrainDragRef = useRef(null)
   const [availableSize, setAvailableSize] = useState({ width: 720, height: 720 })
   const hasLayout = layout !== null
-  function clearTerrainDrag() {
-    terrainDragRef.current?.image?.remove()
-    terrainDragRef.current = null
-  }
-  useEffect(() => () => { terrainDragRef.current?.image?.remove() }, [])
   useEffect(() => {
     const node = layerRef.current?.findOne(`#piece-${selected}`)
     transformerRef.current?.nodes(node ? [node] : [])
@@ -74,9 +71,9 @@ function App() {
   }, [hasLayout])
   const scale = layout ? Math.min(availableSize.width / layout.board.width, availableSize.height / layout.board.height, 720 / layout.board.width, 720 / layout.board.height) : 1
   const selectedPiece = layout?.pieces.find(piece => piece.id === selected)
-  function place(x: number, y: number) {
+  function place(template: TerrainTemplate, x: number, y: number) {
     if (!layout) return
-    const piece: TerrainPiece = { ...building, footprint: { ...building.footprint }, tags: [...building.tags], id: crypto.randomUUID(), x: snap(x), y: snap(y) }
+    const piece: TerrainPiece = { ...structuredClone(template), id: crypto.randomUUID(), x: snap(x), y: snap(y) }
     updateLayout({ ...layout, pieces: [...layout.pieces, piece] })
     setSelected(piece.id)
   }
@@ -153,45 +150,14 @@ function App() {
         <button className="border-0 bg-[#315e49] text-white rounded-md py-3.5 px-[22px] w-full mt-2.5" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><aside className="bg-[#fffef9] border border-solid border-[#d9decf] rounded-lg p-5 self-start max-h-full overflow-y-auto" aria-label="Terrain library">
-        <p className={`${eyebrow} text-[#75816c]`}>TERRAIN LIBRARY</p><h3 className="text-[15px]">Place your terrain</h3><p className={panelText}>Drag a piece onto the board. Drag it again to adjust its position.</p>
-        <button className="bg-[#f2f3eb] border border-solid border-[#c7d0bc] rounded-md py-4 px-2.5 w-full grid gap-3 justify-items-center text-[12px] text-[#354b38] cursor-grab" draggable onPointerDown={event => {
-          clearTerrainDrag()
-          const bounds = templatePreviewRef.current?.getBoundingClientRect()
-          const insidePreview = bounds && bounds.width > 0 && bounds.height > 0
-            && event.clientX >= bounds.left && event.clientX <= bounds.right
-            && event.clientY >= bounds.top && event.clientY <= bounds.bottom
-          // Capture the initial grab, before the pointer moves past the native drag threshold.
-          terrainDragRef.current = {
-            x: insidePreview ? (event.clientX - bounds.left) / bounds.width : 0.5,
-            y: insidePreview ? (event.clientY - bounds.top) / bounds.height : 0.5,
-            image: null,
-          }
-        }} onPointerUp={clearTerrainDrag} onDragStart={event => {
-          const anchor = terrainDragRef.current ?? { x: 0.5, y: 0.5, image: null }
-          const image = document.createElement('div')
-          image.className = 'fixed left-[-10000px] top-0 pointer-events-none box-border border border-solid border-[#63735c]'
-          const width = building.footprint.width * scale
-          const height = building.footprint.height * scale
-          Object.assign(image.style, {
-            width: `${width}px`, height: `${height}px`, background: building.colour,
-          })
-          image.setAttribute('aria-hidden', 'true')
-          document.body.append(image)
-          terrainDragRef.current = { ...anchor, image }
-          event.dataTransfer.setData('text/plain', 'building')
-          event.dataTransfer.effectAllowed = 'copy'
-          event.dataTransfer.setDragImage(image, anchor.x * width, anchor.y * height)
-        }} onDragEnd={clearTerrainDrag}><span ref={templatePreviewRef} aria-label="Building footprint preview" className="w-[76px] h-12 border border-solid border-[#63735c] rounded-[2px]" style={{ background: building.colour }} />{building.name} · {measurement(building.footprint.width, units)} × {measurement(building.footprint.height, units)}</button>
-        <p className="text-[10px] leading-[1.6] text-[#73806b]">{building.tags.join(' · ')}</p>
-      </aside><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden" role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
+      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden" role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
         const anchor = terrainDragRef.current
-        if (event.dataTransfer.getData('text/plain') !== 'building' || !anchor) return
+        if (event.dataTransfer.getData('text/plain') !== anchor?.template.name || !anchor) return
         const bounds = event.currentTarget.getBoundingClientRect()
-        place((event.clientX - bounds.left) / scale - anchor.x * building.footprint.width,
-          (event.clientY - bounds.top) / scale - anchor.y * building.footprint.height)
-        clearTerrainDrag()
+        place(anchor.template, (event.clientX - bounds.left) / scale - anchor.x * anchor.template.footprint.width,
+          (event.clientY - bounds.top) / scale - anchor.y * anchor.template.footprint.height)
+        clearTerrainDrag(terrainDragRef)
       }}>
         <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (event.target === event.target.getStage()) setSelected(null) }}>
           <Layer ref={layerRef}><Rect width={layout.board.width * scale} height={layout.board.height * scale} fill="#e6e9dc" listening={false} />
@@ -199,13 +165,18 @@ function App() {
               {Array.from({ length: Math.floor(layout.board.width / grid) }, (_, index) => <Line key={`x-${index}`} points={[(index + 1) * grid * scale, 0, (index + 1) * grid * scale, layout.board.height * scale]} stroke="#cbd3c2" strokeWidth={1} listening={false} />)}
               {Array.from({ length: Math.floor(layout.board.height / grid) }, (_, index) => <Line key={`y-${index}`} points={[0, (index + 1) * grid * scale, layout.board.width * scale, (index + 1) * grid * scale]} stroke="#cbd3c2" strokeWidth={1} listening={false} />)}
             </>}
-            {layout.pieces.map(piece => <Rect id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.height * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} draggable dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
+            {layout.pieces.map(piece => {
+              const circular = piece.footprint.kind === 'circle'
+              const Footprint = circular ? Ellipse : Rect
+              // Ellipse is centre-based; retain the same local top-left origin as rectangles.
+              return <Footprint offsetX={circular ? -piece.footprint.width * scale / 2 : 0} offsetY={circular ? -piece.footprint.height * scale / 2 : 0} id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.height * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} draggable dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
               editPiece({ ...piece, x: event.target.x() / scale, y: event.target.y() / scale, rotation: event.target.rotation() })
             }} onMouseDown={() => setSelected(piece.id)} onDragStart={() => setSelected(piece.id)} onDragEnd={event => {
               const x = snap(event.target.x() / scale), y = snap(event.target.y() / scale)
               event.target.position({ x: x * scale, y: y * scale })
               editPiece({ ...piece, x, y })
-            }} />)}
+            }} />
+            })}
             {/* When Ctrl enables snap angles, always choose the nearest one. */}
             <Transformer ref={transformerRef} resizeEnabled={false} rotateEnabled rotateAnchorOffset={24} rotationSnapTolerance={180} />
           </Layer>
@@ -215,7 +186,7 @@ function App() {
         <section className={panel} aria-label="Terrain pieces"><p className={`${eyebrow} text-[#75816c]`}>ON THE BOARD</p><h3 className={panelHeading}>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
         <ul className="list-none p-0 mb-0">{layout.pieces.map((piece, index) => <li key={piece.id}><button className="text-left w-full p-2 border-0 bg-transparent text-[#465c42] rounded-sm aria-pressed:bg-[#e3e9da]" aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
         {selectedPiece && <section className={panel} aria-label="Selected terrain"><p className={`${eyebrow} text-[#75816c]`}>SELECTED TERRAIN</p><h3 className={panelHeading}>{selectedPiece.name}</h3><p className={panelText}>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
-          <GeometryEditor key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} onApply={editPiece} />
+          <TerrainProperties key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} availableTags={[...new Set([...terrainCatalog.flatMap(template => template.tags), ...layout.pieces.flatMap(piece => piece.tags)])]} onApply={editPiece} />
           <p className={panelText}>Drag the round handle above the selected footprint to rotate. Hold Ctrl to snap in 15° increments.</p>
         </section>}
       </aside></div>
