@@ -51,6 +51,7 @@ test('membership and colour edits are independent across duplicates and persist'
   await page.getByRole('button', { name: 'Forest 2', exact: true }).click()
   await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).not.toBeChecked()
   await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#abcdef')
+  await expect.poll(() => boardPixel(board, 195, 195)).toEqual([171, 205, 239, 255])
 })
 
 test('oval width and depth, local origin, rotation and movement stay physical across units and history', async ({ page }) => {

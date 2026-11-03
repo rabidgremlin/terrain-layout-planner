@@ -1,5 +1,20 @@
 export type TerrainTag = { id: string; name: string; blocksLos: boolean }
-export const suppliedTags = (): TerrainTag[] => ['Impassable', 'Sight Blocking', 'Cover', 'Difficult', 'Dense', 'Steep', 'Dangerous', 'Unstable', 'Climbable'].map(name => ({ id: name, name, blocksLos: name === 'Sight Blocking' || name === 'Dense' }))
+// IDs are permanent catalog references, independent of the editable display names.
+export const tagIds = {
+  impassable: 'Impassable', sightBlocking: 'Sight Blocking', cover: 'Cover', difficult: 'Difficult',
+  dense: 'Dense', steep: 'Steep', dangerous: 'Dangerous', unstable: 'Unstable', climbable: 'Climbable',
+} as const
+export const suppliedTags = (): TerrainTag[] => [
+  { id: tagIds.impassable, name: 'Impassable', blocksLos: false },
+  { id: tagIds.sightBlocking, name: 'Sight Blocking', blocksLos: true },
+  { id: tagIds.cover, name: 'Cover', blocksLos: false },
+  { id: tagIds.difficult, name: 'Difficult', blocksLos: false },
+  { id: tagIds.dense, name: 'Dense', blocksLos: true },
+  { id: tagIds.steep, name: 'Steep', blocksLos: false },
+  { id: tagIds.dangerous, name: 'Dangerous', blocksLos: false },
+  { id: tagIds.unstable, name: 'Unstable', blocksLos: false },
+  { id: tagIds.climbable, name: 'Climbable', blocksLos: false },
+]
 export type Game = 'firefight' | 'custom'
 export type TerrainPiece = {
   id: string

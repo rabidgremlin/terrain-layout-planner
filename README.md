@@ -69,8 +69,8 @@ do not introduce another undo mechanism. Selection and preference setters must
 not create history entries or clear redo. Unchanged layouts are ignored by
 history equality checks.
 
-Storage continues to contain the raw version-1 layout at
-`terrain-planner.current-layout.v1`. The editor store loads it once per session
+Storage contains the raw version-2 layout at
+`terrain-planner.current-layout.v2`. The editor store loads it once per session
 and autosaves layout changes, including undo/redo, through the existing validated
 storage boundary. UI preferences and history are not persisted. Browser tests
 cover storage and preference/no-op history behaviour.
