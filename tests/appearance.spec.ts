@@ -72,3 +72,29 @@ test('wall presets and draft tag management appearance', async ({ page }) => {
   await dialog.getByRole('textbox', { name: 'Tag name: Scaling', exact: true }).focus()
   await expect(page).toHaveScreenshot('settings-tag-edits.png', { threshold: 0.01 })
 })
+
+test('point-to-point sight line shows blocked and clear overlays', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Create layout' }).click()
+  const board = page.getByRole('region', { name: 'Terrain board' })
+  await page.getByLabel('Building footprint preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
+  await page.getByLabel('X position').fill('12')
+  await page.getByLabel('Y position').fill('10')
+  await page.getByRole('button', { name: 'Apply', exact: true }).click()
+  await page.getByRole('button', { name: 'Measure line of sight', exact: true }).click()
+  for (const x of [6, 22]) {
+    const bounds = (await board.boundingBox())!
+    await page.mouse.click(bounds.x + x * bounds.width / 48, bounds.y + 12 * bounds.height / 48)
+  }
+  const status = page.getByRole('region', { name: 'Line of sight' }).getByRole('status')
+  await expect(status).toContainText('Blocked')
+  await page.mouse.move(0, 0)
+  await expect(page).toHaveScreenshot('sight-line-blocked.png', { threshold: 0.01 })
+  await page.getByRole('button', { name: 'Layout settings' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Layout settings' })
+  await dialog.getByRole('checkbox', { name: 'Sight Blocking Blocks LOS' }).uncheck()
+  await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(status).toContainText('Clear')
+  await page.mouse.move(0, 0)
+  await expect(page).toHaveScreenshot('sight-line-clear.png', { threshold: 0.01 })
+})

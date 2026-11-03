@@ -107,6 +107,23 @@ Each Apply is one shared undo/redo step and autosaves all piece properties.
 Editing a placement or duplicate leaves other pieces and the catalog unchanged.
 Draft changes remain local until Apply and reset when selection or units change.
 
+## Point-to-point line of sight
+
+Use **Measure line of sight** in the toolbar and select two board points. The line
+shows Clear or Blocked and its distance in the selected units. A third point starts
+a new measurement; **Clear line** resets it and Escape exits the tool. Keyboard
+users can move the marker with arrows (1 selected unit, or 0.1 with Shift), then
+press Enter or Space to select each endpoint.
+
+The result updates after committed terrain or shared-tag edits and undo/redo.
+Measuring consumes no layout history and does not save the measurement. Blocking
+footprints are solid: endpoints inside them and contact with an edge or tangent
+are blocked. This top-down 2D planning approximation deliberately simplifies
+Firefight Dense rules and does not adjudicate miniature-eye-level visibility.
+
+See [Planner analysis](docs/planner-analysis.md) for the public numerical interface,
+physical-coordinate conventions, and polygon support ahead of the polygon editor.
+
 ## Styling
 
 Use Tailwind utilities through `@tailwindcss/vite` for all component styling.
@@ -131,7 +148,7 @@ geometry, board fitting, and screen-to-board conversion independent of styling.
 `tests/appearance.spec.ts` compares screenshots against the approved
 Chromium/Linux appearance at 1280px, 1000px, and 800px: setup, custom fields,
 selected/deselected terrain, wall presets, tag management, toolbar toggles, hover,
-keyboard focus, and compact
+keyboard focus, point-to-point sight lines, and compact
 save-failure feedback. The original Tailwind migration baselines were updated
 for the expanded catalog and properties controls in #5. Run `npx playwright test tests/appearance.spec.ts` to
 compare; inspect differences before intentionally updating any baselines. A small

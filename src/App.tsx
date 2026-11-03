@@ -10,6 +10,8 @@ import { TerrainLibrary } from './TerrainLibrary'
 import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
 import type { Game, TerrainPiece, TerrainTemplate } from './planner'
+import { SightLineOverlay, SightLineReadout } from './SightLine'
+import { useSightLine } from './useSightLine'
 import { LayoutSettings } from './LayoutSettings'
 import { filterDefinedTagIds, suppliedTags, withTagDefinitions } from './planner'
 import { fieldControl, setupLabel } from './uiStyles'
@@ -35,6 +37,9 @@ function App() {
     createLayout, commitLayout: updateLayout, undo, redo,
     setSelected, setUnits, setSnapping, setShowGrid, setGrid,
   } = useEditorStore()
+  const sightLineBoardRef = useRef<HTMLDivElement>(null)
+  const sightLineTriggerRef = useRef<HTMLButtonElement>(null)
+  const sightLine = useSightLine(layout, units, sightLineBoardRef, sightLineTriggerRef)
   const canUndo = useStore(useEditorStore.temporal, state => state.pastStates.length > 0)
   const canRedo = useStore(useEditorStore.temporal, state => state.futureStates.length > 0)
   const transformerRef = useRef<Konva.Transformer>(null)
@@ -52,8 +57,8 @@ function App() {
   const hasLayout = layout !== null
   useEffect(() => {
     const node = layerRef.current?.findOne(`#piece-${selected}`)
-    transformerRef.current?.nodes(node ? [node] : [])
-  }, [selected, layout])
+    transformerRef.current?.nodes(!sightLine.active && node ? [node] : [])
+  }, [selected, layout, sightLine.active])
   useEffect(() => {
     function updateRotationSnapping(event: MouseEvent) {
       transformerRef.current?.rotationSnaps(event.ctrlKey ? rotationSnapAngles : [])
@@ -123,6 +128,7 @@ function App() {
             <button className={toolbarButton} type="button" aria-label="Show grid" title="Show grid" aria-pressed={showGrid} onClick={() => setShowGrid(!showGrid)}><ToolbarIcon path="M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18" /></button>
             <button className={toolbarButton} type="button" aria-label="Snap to grid" title="Snap to grid" aria-pressed={snapping} onClick={() => setSnapping(!snapping)}><ToolbarIcon path="M6 3v9a6 6 0 0 0 12 0V3h-4v9a2 2 0 0 1-4 0V3z M6 7h4 M14 7h4" /></button>
           </div>
+          <button ref={sightLineTriggerRef} className={toolbarButton} type="button" aria-label="Measure line of sight" title="Measure line of sight" aria-pressed={sightLine.active} onClick={sightLine.toggle}><ToolbarIcon path="M4 20 20 4 M4 4v4 M4 4h4 M20 20v-4 M20 20h-4 M8 16l-2-2 M12 12l-2-2 M16 8l-2-2" /></button>
           <label className={toolbarLabel}>Units<select className={`${fieldControl} p-1.5 h-8 text-[12px] w-[104px]`} value={units} onChange={event => setUnits(event.target.value as Units)}><option value="in">Inches</option><option value="cm">Centimetres</option></select></label>
           <label className={toolbarLabel}>Grid ({units})<input className={`${fieldControl} p-1.5 h-8 text-[12px] w-16`} aria-label={`Grid spacing (${units})`} key={units + grid} type="number" min={0.01 * unitFactor(units)} step="any" defaultValue={Number((grid * unitFactor(units)).toFixed(8))} onBlur={event => {
             const value = Number(event.target.value) / unitFactor(units)
@@ -154,7 +160,7 @@ function App() {
         <button className="border-0 bg-[#315e49] text-white rounded-md py-3.5 px-[22px] w-full mt-2.5" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary tags={layout.tags} units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden" role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
+      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary tags={layout.tags} units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden focus-visible:outline-3 focus-visible:outline-solid focus-visible:outline-[#b47f36] focus-visible:outline-offset-3" ref={sightLineBoardRef} role="region" aria-label="Terrain board" tabIndex={sightLine.active ? 0 : undefined} aria-describedby={sightLine.active ? 'sight-line-help' : undefined} onKeyDown={sightLine.onBoardKeyDown} style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
         const anchor = terrainDragRef.current
         if (event.dataTransfer.getData('text/plain') !== anchor?.template.name || !anchor) return
@@ -163,7 +169,11 @@ function App() {
           (event.clientY - bounds.top) / scale - anchor.y * anchor.template.footprint.depth)
         clearTerrainDrag(terrainDragRef)
       }}>
-        <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (event.target === event.target.getStage()) setSelected(null) }}>
+        <Stage width={layout.board.width * scale} height={layout.board.height * scale} onMouseDown={event => { if (!sightLine.active && event.target === event.target.getStage()) setSelected(null) }} onPointerDown={event => {
+          if (!sightLine.active || event.evt.button !== 0) return
+          const point = event.target.getStage()?.getPointerPosition()
+          if (point) sightLine.choose({ x: point.x / scale, y: point.y / scale })
+        }}>
           <Layer ref={layerRef}><Rect width={layout.board.width * scale} height={layout.board.height * scale} fill="#e6e9dc" listening={false} />
             {showGrid && grid * scale >= 8 && <>
               {Array.from({ length: Math.floor(layout.board.width / grid) }, (_, index) => <Line key={`x-${index}`} points={[(index + 1) * grid * scale, 0, (index + 1) * grid * scale, layout.board.height * scale]} stroke="#cbd3c2" strokeWidth={1} listening={false} />)}
@@ -173,7 +183,7 @@ function App() {
               const oval = piece.footprint.kind === 'ellipse'
               const Footprint = oval ? Ellipse : Rect
               // Ellipse is centre-based; retain the same local top-left origin as rectangles.
-              return <Footprint offsetX={oval ? -piece.footprint.width * scale / 2 : 0} offsetY={oval ? -piece.footprint.depth * scale / 2 : 0} id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.depth * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} draggable dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
+              return <Footprint offsetX={oval ? -piece.footprint.width * scale / 2 : 0} offsetY={oval ? -piece.footprint.depth * scale / 2 : 0} id={`piece-${piece.id}`} key={piece.id} x={piece.x * scale} y={piece.y * scale} width={piece.footprint.width * scale} height={piece.footprint.depth * scale} rotation={piece.rotation} fill={piece.colour} stroke={piece.id === selected ? '#285849' : '#63735c'} strokeWidth={piece.id === selected ? 3 : 1} listening={!sightLine.active} draggable={!sightLine.active} dragBoundFunc={position => ({ x: snap(position.x / scale) * scale, y: snap(position.y / scale) * scale })} onTransformEnd={event => {
               editPiece({ ...piece, x: event.target.x() / scale, y: event.target.y() / scale, rotation: event.target.rotation() })
             }} onMouseDown={() => setSelected(piece.id)} onDragStart={() => setSelected(piece.id)} onDragEnd={event => {
               const x = snap(event.target.x() / scale), y = snap(event.target.y() / scale)
@@ -183,9 +193,10 @@ function App() {
             })}
             {/* When Ctrl enables snap angles, always choose the nearest one. */}
             <Transformer ref={transformerRef} resizeEnabled={false} rotateEnabled rotateAnchorOffset={24} rotationSnapTolerance={180} />
+            {sightLine.active && <SightLineOverlay tool={sightLine} scale={scale} />}
           </Layer>
         </Stage>
-      </div></div><p className="m-0 text-[11px] leading-[1.6] text-[#7a856f]">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p></section>
+      </div></div><div className="grid gap-2"><p className="m-0 text-[11px] leading-[1.6] text-[#7a856f]">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p>{sightLine.active && <SightLineReadout tool={sightLine} units={units} />}</div></section>
       <aside className={`grid gap-4 h-full min-h-0 self-start p-0 border-0 rounded-lg bg-transparent overflow-hidden ${selectedPiece ? 'grid-rows-[minmax(100px,1fr)_minmax(0,2fr)]' : 'grid-rows-[minmax(0,1fr)]'}`} aria-label="Terrain panels">
         <section className={panel} aria-label="Terrain pieces"><p className={`${eyebrow} text-[#75816c]`}>ON THE BOARD</p><h3 className={panelHeading}>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
         <ul className="list-none p-0 mb-0">{layout.pieces.map((piece, index) => <li key={piece.id}><button className="text-left w-full p-2 border-0 bg-transparent text-[#465c42] rounded-sm aria-pressed:bg-[#e3e9da]" aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
