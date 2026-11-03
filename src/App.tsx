@@ -39,7 +39,7 @@ function App() {
   } = useEditorStore()
   const sightLineBoardRef = useRef<HTMLDivElement>(null)
   const sightLineTriggerRef = useRef<HTMLButtonElement>(null)
-  const sightLine = useSightLine(layout, units, sightLineBoardRef, sightLineTriggerRef)
+  const sightLine = useSightLine(layout, sightLineBoardRef, sightLineTriggerRef)
   const canUndo = useStore(useEditorStore.temporal, state => state.pastStates.length > 0)
   const canRedo = useStore(useEditorStore.temporal, state => state.futureStates.length > 0)
   const transformerRef = useRef<Konva.Transformer>(null)
@@ -160,7 +160,7 @@ function App() {
         <button className="border-0 bg-[#315e49] text-white rounded-md py-3.5 px-[22px] w-full mt-2.5" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary tags={layout.tags} units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden focus-visible:outline-3 focus-visible:outline-solid focus-visible:outline-[#b47f36] focus-visible:outline-offset-3" ref={sightLineBoardRef} role="region" aria-label="Terrain board" tabIndex={sightLine.active ? 0 : undefined} aria-describedby={sightLine.active ? 'sight-line-help' : undefined} onKeyDown={sightLine.onBoardKeyDown} style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
+      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary tags={layout.tags} units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden focus-visible:outline-3 focus-visible:outline-solid focus-visible:outline-[#b47f36] focus-visible:outline-offset-3" ref={sightLineBoardRef} role="region" aria-label="Terrain board" tabIndex={sightLine.active ? 0 : undefined} aria-describedby={sightLine.active ? 'sight-line-help' : undefined} style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
         const anchor = terrainDragRef.current
         if (event.dataTransfer.getData('text/plain') !== anchor?.template.name || !anchor) return
@@ -196,8 +196,9 @@ function App() {
             {sightLine.active && <SightLineOverlay tool={sightLine} scale={scale} />}
           </Layer>
         </Stage>
-      </div></div><div className="grid gap-2"><p className="m-0 text-[11px] leading-[1.6] text-[#7a856f]">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p>{sightLine.active && <SightLineReadout tool={sightLine} units={units} />}</div></section>
-      <aside className={`grid gap-4 h-full min-h-0 self-start p-0 border-0 rounded-lg bg-transparent overflow-hidden ${selectedPiece ? 'grid-rows-[minmax(100px,1fr)_minmax(0,2fr)]' : 'grid-rows-[minmax(0,1fr)]'}`} aria-label="Terrain panels">
+      </div></div><div className="grid gap-2"><p className="m-0 text-[11px] leading-[1.6] text-[#7a856f]">{measurement(layout.board.width, units)} × {measurement(layout.board.height, units)} playing area · top-down terrain footprints</p></div></section>
+      <aside className={`grid gap-4 h-full min-h-0 self-start p-0 border-0 rounded-lg bg-transparent overflow-hidden ${sightLine.active ? selectedPiece ? 'grid-rows-[auto_minmax(100px,1fr)_minmax(0,2fr)]' : 'grid-rows-[auto_minmax(0,1fr)]' : selectedPiece ? 'grid-rows-[minmax(100px,1fr)_minmax(0,2fr)]' : 'grid-rows-[minmax(0,1fr)]'}`} aria-label="Terrain panels">
+        {sightLine.active && <SightLineReadout tool={sightLine} units={units} />}
         <section className={panel} aria-label="Terrain pieces"><p className={`${eyebrow} text-[#75816c]`}>ON THE BOARD</p><h3 className={panelHeading}>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
         <ul className="list-none p-0 mb-0">{layout.pieces.map((piece, index) => <li key={piece.id}><button className="text-left w-full p-2 border-0 bg-transparent text-[#465c42] rounded-sm aria-pressed:bg-[#e3e9da]" aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
         {selectedPiece && <section className={panel} aria-label="Selected terrain"><p className={`${eyebrow} text-[#75816c]`}>SELECTED TERRAIN</p><h3 className={panelHeading}>{selectedPiece.name}</h3><p className={panelText}>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>

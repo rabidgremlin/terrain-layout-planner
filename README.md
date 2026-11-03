@@ -109,11 +109,10 @@ Draft changes remain local until Apply and reset when selection or units change.
 
 ## Point-to-point line of sight
 
-Use **Measure line of sight** in the toolbar and select two board points. The line
-shows Clear or Blocked and its distance in the selected units. A third point starts
-a new measurement; **Clear line** resets it and Escape exits the tool. Keyboard
-users can move the marker with arrows (1 selected unit, or 0.1 with Shift), then
-press Enter or Space to select each endpoint.
+Use **Measure line of sight** in the toolbar and click two board points. The panel
+to the right of the board shows Clear or Blocked and the distance in the selected
+units. Blocked lines are red and dashed; clear lines are green and solid. A third
+click starts a new measurement; **Clear line** resets it and Escape exits the tool.
 
 The result updates after committed terrain or shared-tag edits and undo/redo.
 Measuring consumes no layout history and does not save the measurement. Blocking
@@ -130,6 +129,7 @@ Use Tailwind utilities through `@tailwindcss/vite` for all component styling.
 Keep complete utility names in JSX or shared class strings (`src/uiStyles.ts`);
 do not build utility names from fragments. Use the existing exact colours and
 sizes when extending the interface rather than changing the palette or spacing.
+The blocked LOS overlay uses `#a44132` red to distinguish it from clear sight lines.
 
 `src/index.css` imports Tailwind's theme and utilities deliberately **without
 Preflight**. This preserves browser heading weights and margins, paragraph/list

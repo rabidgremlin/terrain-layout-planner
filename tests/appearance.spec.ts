@@ -97,4 +97,7 @@ test('point-to-point sight line shows blocked and clear overlays', async ({ page
   await expect(status).toContainText('Clear')
   await page.mouse.move(0, 0)
   await expect(page).toHaveScreenshot('sight-line-clear.png', { threshold: 0.01 })
+  await page.setViewportSize({ width: 800, height: 720 })
+  await expect(status).toContainText('Clear')
+  await expect(page).toHaveScreenshot('sight-line-sidebar-800.png', { threshold: 0.01 })
 })

@@ -1,10 +1,21 @@
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
-async function boardPoint(page: Page, x: number, y: number) {
+async function boardPoint(page: Page, x: number, y: number, dimensions = { width: 48, height: 48 }) {
   const board = page.getByRole('region', { name: 'Terrain board' })
   const bounds = (await board.boundingBox())!
-  await page.mouse.click(bounds.x + x * bounds.width / 48, bounds.y + y * bounds.height / 48)
+  await page.mouse.click(bounds.x + x * bounds.width / dimensions.width, bounds.y + y * bounds.height / dimensions.height)
+}
+
+async function hasRedSightLine(page: Page) {
+  // Inspect the rendered segment before the building, through the public board canvas.
+  return page.getByRole('region', { name: 'Terrain board' }).locator('canvas').first().evaluate((canvas: HTMLCanvasElement) => {
+    const pixels = canvas.getContext('2d')!.getImageData(Math.floor(canvas.width * 6 / 48), Math.floor(canvas.height * 12 / 48) - 2, Math.ceil(canvas.width * 3 / 48), 5).data
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] > 100 && pixels[i] > pixels[i + 1] * 1.5 && pixels[i] > pixels[i + 2] * 1.5) return true
+    }
+    return false
+  })
 }
 
 test('select two board points, read physical distance in either unit, and clear or restart the sight line', async ({ page }) => {
@@ -12,11 +23,22 @@ test('select two board points, read physical distance in either unit, and clear 
   await page.getByRole('button', { name: 'Create layout' }).click()
   const tool = page.getByRole('button', { name: 'Measure line of sight', exact: true })
   await expect(tool).toBeVisible()
+  const board = page.getByRole('region', { name: 'Terrain board' })
+  const before = (await board.boundingBox())!
   await tool.click()
   const readout = page.getByRole('region', { name: 'Line of sight' })
   await expect(readout).toContainText('Select a starting point')
+  const panelBounds = (await readout.boundingBox())!
+  const boardBounds = (await board.boundingBox())!
+  expect(panelBounds.x).toBeGreaterThanOrEqual(boardBounds.x + boardBounds.width)
+  expect(panelBounds.y).toBeCloseTo(boardBounds.y, 0)
+  expect(boardBounds).toEqual(before)
   await boardPoint(page, 10, 10)
   await expect(readout).toContainText('Select an ending point')
+  for (const key of ['ArrowRight', 'ArrowDown', 'Enter', 'Space']) {
+    await page.keyboard.press(key)
+    await expect(readout).toContainText('Select an ending point')
+  }
   await boardPoint(page, 13, 14)
   await expect(readout.getByRole('status')).toContainText('Clear')
   const inches = Number((await readout.getByRole('status').innerText()).match(/Distance: ([\d.]+)/)![1])
@@ -49,6 +71,7 @@ test('committed shared flags, memberships, geometry and history recompute the sa
   await boardPoint(page, 5, 12)
   await boardPoint(page, 20, 12)
   await expect(status).toContainText('Blocked')
+  await expect.poll(() => hasRedSightLine(page)).toBe(true)
   const settings = page.getByRole('button', { name: 'Layout settings' })
   const dialog = page.getByRole('dialog', { name: 'Layout settings' })
   await settings.click()
@@ -59,6 +82,7 @@ test('committed shared flags, memberships, geometry and history recompute the sa
   await dialog.getByRole('checkbox', { name: 'Sight Blocking Blocks LOS' }).uncheck()
   await dialog.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(status).toContainText('Clear')
+  await expect.poll(() => hasRedSightLine(page)).toBe(false)
   await page.getByRole('button', { name: 'Undo', exact: true }).click()
   await expect(status).toContainText('Blocked')
   await page.getByRole('button', { name: 'Redo', exact: true }).click()
@@ -111,7 +135,7 @@ test('an endpoint inside Dense or custom blocking terrain is blocked without an 
   await expect(status).toContainText('Blocked')
 })
 
-test('keyboard selection survives board fitting and unit changes while preserving redo', async ({ page }) => {
+test('mouse-selected endpoints survive board fitting and unit changes while preserving redo', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
   await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
@@ -119,27 +143,26 @@ test('keyboard selection survives board fitting and unit changes while preservin
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
   await page.getByRole('button', { name: 'Undo', exact: true }).click()
   await page.getByRole('button', { name: 'Measure line of sight', exact: true }).click()
-  const board = page.getByRole('region', { name: 'Terrain board' })
-  await expect(board).toBeFocused()
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('ArrowRight')
-  await page.keyboard.press('ArrowRight')
-  await page.keyboard.press('ArrowRight')
-  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('Enter')
-  const status = page.getByRole('region', { name: 'Line of sight' }).getByRole('status')
+  await boardPoint(page, 24, 24)
+  await boardPoint(page, 27, 28)
+  const readout = page.getByRole('region', { name: 'Line of sight' })
+  const status = readout.getByRole('status')
   await expect(status).toContainText('Clear · Distance: 5.00 in')
   await page.getByLabel('Units').selectOption('cm')
   await expect(status).toContainText('12.70 cm')
   await page.setViewportSize({ width: 800, height: 720 })
   await expect(status).toContainText('12.70 cm')
+  const boardBounds = (await page.getByRole('region', { name: 'Terrain board' }).boundingBox())!
+  const panelBounds = (await readout.boundingBox())!
+  expect(panelBounds.x).toBeGreaterThanOrEqual(boardBounds.x + boardBounds.width)
+  expect(panelBounds.x + panelBounds.width).toBeLessThanOrEqual(800)
   await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeEnabled()
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: 'Redo', exact: true }).click()
   await expect(page.getByLabel('Terrain width')).toHaveValue('20.32')
 })
 
-test('a custom rectangular board uses selected-unit keyboard steps including fine movement', async ({ page }) => {
+test('mouse clicks on a custom rectangular board report distance in the selected units', async ({ page }) => {
   await page.goto('/')
   await page.getByLabel('Board size').selectOption('custom')
   await page.getByLabel('Units').selectOption('cm')
@@ -147,15 +170,13 @@ test('a custom rectangular board uses selected-unit keyboard steps including fin
   await page.getByLabel('Height (centimetres)').fill('60.96')
   await page.getByRole('button', { name: 'Create layout' }).click()
   await page.getByRole('button', { name: 'Measure line of sight', exact: true }).click()
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('ArrowRight')
-  await page.keyboard.press('Enter')
+  await boardPoint(page, 10, 10, { width: 36, height: 24 })
+  await boardPoint(page, 13, 14, { width: 36, height: 24 })
   const readout = page.getByRole('region', { name: 'Line of sight' })
-  await expect(readout.getByRole('status')).toContainText('Clear · Distance: 1.00 cm')
+  await expect(readout.getByRole('status')).toContainText('Clear · Distance: 12.70 cm')
   await readout.getByRole('button', { name: 'Clear line', exact: true }).click()
-  await page.keyboard.press('Enter')
-  await page.keyboard.press('Shift+ArrowDown')
-  await page.keyboard.press('Enter')
-  await expect(readout.getByRole('status')).toContainText('Clear · Distance: 0.10 cm')
+  await boardPoint(page, 10, 10, { width: 36, height: 24 })
+  await boardPoint(page, 10, 11, { width: 36, height: 24 })
+  await expect(readout.getByRole('status')).toContainText('Clear · Distance: 2.54 cm')
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
 })
