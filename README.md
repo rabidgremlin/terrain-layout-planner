@@ -73,47 +73,23 @@ Storage continues to contain the raw version-1 layout at
 `terrain-planner.current-layout.v1`. The editor store loads it once per session
 and autosaves layout changes, including undo/redo, through the existing validated
 storage boundary. UI preferences and history are not persisted. Browser tests
-cover compatibility with existing saves and preference/no-op history behaviour.
-
-## Accepted tag-model redesign
-
-[ADR 0002](docs/adr/0002-derive-los-blocking-from-layout-tags.md) records the accepted
-next design: layout-owned tag blocking rules managed through a Layout settings
-Tags tab, replacing the current per-piece visibility selector. Implementation is
-pending and tracked by [the tag redesign parent (#20)](https://github.com/rabidgremlin/terrain-layout-planner/issues/20);
-the instructions below describe the current application.
+cover storage and preference/no-op history behaviour.
 
 ## Terrain catalog and properties
 
-The terrain library provides buildings, barricades, fields, forests, hills, water,
-lava, rubble, ruins, swamps, mountains, and walls. Drag a template's footprint or
-card onto the board. Ovals retain the same local top-left positioning and
-rotation convention as rectangles and support independent width and depth.
-Existing version-1 rectangular and circular layouts remain compatible; legacy
-`circle` footprints load as `ellipse` footprints with their geometry preserved.
-Terrain size pairs are width × depth; height means vertical extent above the board
-and is not currently modelled. Custom board setup continues to use Width/Height.
+The terrain library offers rectangles and ovals with independent width and depth.
+Drag a template onto the board, then select a piece to edit its geometry, colour,
+and tag memberships. Choose **Apply** to commit these changes together.
 
-Saved footprints now use `depth`. Legacy footprint `height` loads as `depth` when
-`depth` is absent; if both exist, `depth` takes precedence and must be valid. Saves
-write only `depth` for terrain footprints, keeping the existing storage key and
-version. DOM and Konva dimensions still use `height` for rendering.
+Open **Layout settings** in the toolbar to add tags and change their **Blocks LOS**
+flags. Changes remain a draft until **Save**; **Cancel** discards them. Names are
+trimmed and must be unique ignoring case. A piece blocks line of sight if any of
+its assigned tags blocks. Sight Blocking and Dense block by default; other supplied
+tags do not. Dense is treated as a solid obstacle in this two-dimensional planning
+approximation. New placements use the current layout's shared tag rules.
 
-Catalog tags follow the supplied Firefight advanced rules v3.6.0, page 11.
-Dimensions, colours, and explicit 2D visibility defaults are planner choices,
-not prescribed terrain sizes or a substitute for agreeing terrain rules.
-Water defaults to a shallow lake (Difficult); walls default to Blocking visibility
-and Climbable. Buildings and mountains default to Blocking, forests to Dense,
-and the other choices to Clear. All pieces allow overrides.
-
-Select a placed piece to edit its colour, visibility behaviour, and any number of
-tags along with its geometry, then choose **Apply**. Use **New tag** and **Add tag**
-(or Enter) to add a custom tag to the draft. Names are trimmed; existing names are
-reused without regard to case. Applied tags are available for reuse on other
-pieces in the same layout. Check or uncheck tags to change membership. Tags and
-colour never determine visibility; only the explicit Clear/Blocking/Dense
-setting does. Dense permits sight into or out of a footprint, but not through it.
-These settings describe a 2D planning approximation, not miniature-eye-level LOS.
+Layouts use version 2 storage. Older planner saves are reset rather than migrated.
+See [ADR 0002](docs/adr/0002-derive-los-blocking-from-layout-tags.md) for the model.
 
 Each Apply is one shared undo/redo step and autosaves all piece properties.
 Editing a placement or duplicate leaves other pieces and the catalog unchanged.

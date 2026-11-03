@@ -1,18 +1,19 @@
 import { test, expect } from '@playwright/test'
+import { suppliedTags } from '../src/planner'
 
 const legacyLayout = {
-  version: 1, game: 'custom', board: { width: 36, height: 24 },
+  version: 2, tags: suppliedTags(), game: 'custom', board: { width: 36, height: 24 },
   pieces: [{
     id: 'legacy-building', name: 'Building',
-    footprint: { kind: 'rectangle', width: 6, height: 4 },
+    footprint: { kind: 'rectangle', width: 6, depth: 4 },
     x: 7.125, y: 8.25, rotation: 30, colour: '#a8b89c',
-    tags: ['Impassable', 'Sight Blocking'], visibility: 'blocking',
+    tags: ['Impassable', 'Sight Blocking'],
   }],
 }
 
-test('existing saved layouts retain geometry, autosave undo, and reload without history or preferences', async ({ page }) => {
+test('current saved layouts retain geometry, autosave undo, and reload without history or preferences', async ({ page }) => {
   await page.addInitScript(layout => {
-    const key = 'terrain-planner.current-layout.v1'
+    const key = 'terrain-planner.current-layout.v2'
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(layout))
   }, legacyLayout)
   await page.goto('/')
@@ -105,7 +106,7 @@ test('unchanged Apply preserves redo and consumes no undo step, while a new edit
 })
 
 test('invalid saved layouts still show recovery guidance and a fresh history baseline', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('terrain-planner.current-layout.v1', '{"version":1,"board":{"width":0}}'))
+  await page.addInitScript(() => localStorage.setItem('terrain-planner.current-layout.v2', '{"version":2,"board":{"width":0}}'))
   await page.goto('/')
   await expect(page.getByRole('alert')).toContainText('Your saved layout could not be loaded')
   await page.getByRole('button', { name: 'Create layout' }).click()

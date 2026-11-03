@@ -35,78 +35,22 @@ test('catalog offers the Firefight terrain types and places a circular forest th
   }
 })
 
-test('multiple tags, custom tags, colour and visibility share one reversible edit and persist', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Create layout' }).click()
-  const board = page.getByRole('region', { name: 'Terrain board' })
-  await page.getByLabel('Forest footprint preview').dragTo(board, { targetPosition: { x: 300, y: 300 } })
-  for (const tag of ['Cover', 'Difficult', 'Dense']) await expect(page.getByRole('checkbox', { name: tag, exact: true })).toBeChecked()
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  await page.getByRole('checkbox', { name: 'Difficult', exact: true }).uncheck()
-  await page.getByRole('checkbox', { name: 'Dangerous', exact: true }).check()
-  await page.getByLabel('New tag', { exact: true }).fill('  Magic mist  ')
-  await page.getByRole('button', { name: 'Add tag', exact: true }).click()
-  await page.getByLabel('Colour', { exact: true }).fill('#123456')
-  // Tags and colour do not infer a visibility rule, even when a tag is named Blocking.
-  await page.getByLabel('New tag', { exact: true }).fill('Blocking')
-  await page.getByRole('button', { name: 'Add tag', exact: true }).click()
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  await page.getByLabel('Visibility behaviour').selectOption('clear')
-  await page.getByRole('button', { name: 'Apply', exact: true }).click()
-  await page.getByRole('button', { name: 'Undo', exact: true }).click()
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#718c63')
-  await expect(page.getByRole('checkbox', { name: 'Difficult', exact: true })).toBeChecked()
-  await expect(page.getByRole('checkbox', { name: 'Magic mist', exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Redo', exact: true }).click()
-  await page.reload()
-  await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
-  for (const tag of ['Cover', 'Dense', 'Dangerous', 'Magic mist', 'Blocking']) await expect(page.getByRole('checkbox', { name: tag, exact: true })).toBeChecked()
-  await expect(page.getByRole('checkbox', { name: 'Difficult', exact: true })).not.toBeChecked()
-  await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#123456')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('clear')
-  // Observe the rendered board, without inspecting Konva or the editor store.
-  const colour = await boardPixel(board, 300, 300)
-  expect(colour).toEqual([18, 52, 86, 255])
-})
-
-test('placed pieces and duplicates keep independent properties and leave catalog defaults intact', async ({ page }) => {
+test('membership and colour edits are independent across duplicates and persist', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
   await page.getByLabel('Forest footprint preview').dragTo(board, { targetPosition: { x: 180, y: 180 } })
-  await page.getByRole('button', { name: 'Duplicate terrain', exact: true }).click()
+  await page.getByRole('button', { name: 'Duplicate terrain' }).click()
   await page.getByLabel('Colour', { exact: true }).fill('#abcdef')
-  await page.getByLabel('Visibility behaviour').selectOption('blocking')
   await page.getByRole('checkbox', { name: 'Cover', exact: true }).uncheck()
-  await page.getByLabel('New tag', { exact: true }).fill('Ancient')
-  await page.getByRole('button', { name: 'Add tag', exact: true }).click()
   await page.getByRole('button', { name: 'Apply', exact: true }).click()
   await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
   await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).toBeChecked()
-  await expect(page.getByRole('checkbox', { name: 'Ancient', exact: true })).not.toBeChecked()
   await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#718c63')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  // A new placement uses the unchanged catalog definition, and can reuse a custom tag.
-  await page.getByLabel('Forest footprint preview').dragTo(board, { targetPosition: { x: 400, y: 400 } })
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).toBeChecked()
-  await page.getByRole('checkbox', { name: 'Ancient', exact: true }).check()
-  await page.getByRole('button', { name: 'Apply', exact: true }).click()
-  await page.getByRole('button', { name: 'Forest 2', exact: true }).click()
-  await page.getByRole('checkbox', { name: 'Ancient', exact: true }).uncheck()
-  await page.getByRole('button', { name: 'Apply', exact: true }).click()
   await page.reload()
   await page.getByRole('button', { name: 'Forest 2', exact: true }).click()
-  await expect(page.getByRole('checkbox', { name: 'Ancient', exact: true })).not.toBeChecked()
   await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).not.toBeChecked()
   await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#abcdef')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('blocking')
-  await page.getByRole('button', { name: 'Forest 3', exact: true }).click()
-  await expect(page.getByRole('checkbox', { name: 'Ancient', exact: true })).toBeChecked()
-  await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).toBeChecked()
-  await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#718c63')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
 })
 
 test('oval width and depth, local origin, rotation and movement stay physical across units and history', async ({ page }) => {
@@ -163,7 +107,7 @@ test('oval width and depth, local origin, rotation and movement stay physical ac
   await expect(page.getByLabel('Y position')).toHaveValue('13')
 })
 
-test('catalog defaults follow Firefight tags with independently chosen visibility', async ({ page }) => {
+test('catalog defaults follow Firefight tags and derived blocking', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
   const board = page.getByRole('region', { name: 'Terrain board' })
@@ -179,37 +123,15 @@ test('catalog defaults follow Firefight tags with independently chosen visibilit
     ['Ruin', ['Cover', 'Unstable'], 'clear'],
     ['Swamp', ['Difficult'], 'clear'],
     ['Mountain', ['Impassable', 'Sight Blocking'], 'blocking'],
-    ['Wall', ['Climbable'], 'blocking'],
+    ['Wall', ['Climbable'], 'clear'],
   ] as const
   for (const [name, tags, visibility] of defaults) {
     await page.getByLabel(`${name} footprint preview`, { exact: true }).dragTo(board, { targetPosition: { x: 300, y: 300 } })
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
     await expect(page.getByRole('checkbox', { checked: true })).toHaveCount(tags.length)
     for (const tag of tags) await expect(page.getByRole('checkbox', { name: tag, exact: true })).toBeChecked()
-    await expect(page.getByLabel('Visibility behaviour')).toHaveValue(visibility)
+    await expect(page.getByText(`Blocks LOS: ${visibility === 'clear' ? 'No' : 'Yes'}`)).toBeVisible()
   }
-})
-
-test('custom tag drafts deduplicate names and do not commit until Apply', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Create layout' }).click()
-  await page.getByLabel('Building footprint preview').dragTo(page.getByRole('region', { name: 'Terrain board' }), { targetPosition: { x: 180, y: 180 } })
-  await page.getByLabel('New tag', { exact: true }).fill('   ')
-  await page.getByRole('button', { name: 'Add tag', exact: true }).click()
-  await expect(page.getByRole('alert')).toContainText('Enter a tag name')
-  await page.getByLabel('New tag', { exact: true }).fill('  cover  ')
-  await page.getByLabel('New tag', { exact: true }).press('Enter')
-  await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).toBeChecked()
-  await expect(page.getByRole('checkbox', { name: /^cover$/i })).toHaveCount(1)
-  await page.getByLabel('New tag', { exact: true }).fill('Unique')
-  await page.getByLabel('New tag', { exact: true }).press('Enter')
-  await expect(page.getByRole('checkbox', { name: 'Unique', exact: true })).toBeChecked()
-  await page.getByRole('button', { name: 'Undo', exact: true }).click()
-  // Only placement was committed, so one undo removes the piece and its unapplied draft.
-  await expect(page.getByRole('heading', { name: '0 terrain pieces', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Redo', exact: true }).click()
-  await expect(page.getByRole('checkbox', { name: 'Cover', exact: true })).not.toBeChecked()
-  await expect(page.getByRole('checkbox', { name: 'Unique', exact: true })).toHaveCount(0)
 })
 
 test('visual rotation of an oval keeps its centre and shares the existing history', async ({ page }) => {
@@ -244,39 +166,3 @@ test('visual rotation of an oval keeps its centre and shares the existing histor
   await expect.poll(async () => Number(await page.getByLabel('Rotation (degrees)').inputValue())).toBeCloseTo(90, 6)
 })
 
-test('legacy circle saves load with independent axes and retain their properties', async ({ page }) => {
-  await page.addInitScript(() => {
-    const key = 'terrain-planner.current-layout.v1'
-    if (localStorage.getItem(key)) return
-    localStorage.setItem(key, JSON.stringify({
-      version: 1, game: 'custom', board: { width: 48, height: 48 },
-      pieces: [{ id: 'legacy-forest', name: 'Forest', footprint: { kind: 'circle', width: 6, height: 6 },
-        x: 7.125, y: 8.25, rotation: 30, colour: '#123456', tags: ['Cover', 'Difficult', 'Dense', 'Ancient'], visibility: 'dense' }],
-    }))
-  })
-  await page.goto('/')
-  await expect(page.getByRole('alert')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
-  await expect(page.getByLabel('Terrain width')).toHaveValue('6')
-  await expect(page.getByLabel('Terrain depth')).toHaveValue('6')
-  await expect(page.getByLabel('X position')).toHaveValue('7.125')
-  await expect(page.getByLabel('Y position')).toHaveValue('8.25')
-  await expect(page.getByLabel('Rotation (degrees)')).toHaveValue('30')
-  await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#123456')
-  for (const tag of ['Cover', 'Difficult', 'Dense', 'Ancient']) await expect(page.getByRole('checkbox', { name: tag, exact: true })).toBeChecked()
-  await page.getByLabel('Terrain depth').fill('3')
-  await page.getByRole('button', { name: 'Apply', exact: true }).click()
-  await page.getByRole('button', { name: 'Undo', exact: true }).click()
-  await expect(page.getByLabel('Terrain depth')).toHaveValue('6')
-  await page.getByRole('button', { name: 'Redo', exact: true }).click()
-  await page.reload()
-  await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
-  await expect(page.getByLabel('Terrain width')).toHaveValue('6')
-  await expect(page.getByLabel('Terrain depth')).toHaveValue('3')
-  await expect(page.getByLabel('X position')).toHaveValue('7.125')
-  await expect(page.getByLabel('Y position')).toHaveValue('8.25')
-  await expect(page.getByLabel('Rotation (degrees)')).toHaveValue('30')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
-  await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#123456')
-  await expect(page.getByRole('checkbox', { name: 'Ancient', exact: true })).toBeChecked()
-})

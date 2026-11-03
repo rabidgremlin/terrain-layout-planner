@@ -4,13 +4,14 @@ import Konva from 'konva'
 import { useStore } from 'zustand'
 import { useEditorStore } from './editorStore'
 import { TerrainProperties } from './TerrainProperties'
-import { terrainCatalog } from './terrainCatalog'
 import { measurement, unitFactor } from './measurements'
 import type { Units } from './measurements'
 import { TerrainLibrary } from './TerrainLibrary'
 import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
 import type { Game, TerrainPiece, TerrainTemplate } from './planner'
+import { LayoutSettings } from './LayoutSettings'
+import { suppliedTags } from './planner'
 import { fieldControl, setupLabel } from './uiStyles'
 
 const toolbarButton = 'grid place-items-center size-8 p-0 border border-solid border-transparent rounded-[5px] bg-transparent text-[#465c42] enabled:hover:bg-[#e9eddf] aria-pressed:border-[#90a587] aria-pressed:bg-[#dce6d2] aria-pressed:text-[#285849]'
@@ -38,6 +39,8 @@ function App() {
   const canRedo = useStore(useEditorStore.temporal, state => state.futureStates.length > 0)
   const transformerRef = useRef<Konva.Transformer>(null)
   const layerRef = useRef<Konva.Layer>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsTrigger = useRef<HTMLButtonElement>(null)
   const [game, setGame] = useState<Game>('firefight')
   const [size, setSize] = useState('48')
   const [width, setWidth] = useState('48')
@@ -82,7 +85,7 @@ function App() {
   }, [layout, selectedPiece, updateLayout])
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!layout || event.defaultPrevented || event.isComposing || event.altKey) return
+      if (!layout || settingsOpen || event.defaultPrevented || event.isComposing || event.altKey) return
       const target = event.target
       if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select'))) return
       const key = event.key.toLowerCase()
@@ -99,12 +102,13 @@ function App() {
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [layout, selectedPiece, canUndo, canRedo, undo, redo, deleteSelectedTerrain])
+  }, [layout, settingsOpen, selectedPiece, canUndo, canRedo, undo, redo, deleteSelectedTerrain])
   return <main className={`max-w-[1440px] mx-auto px-6 py-4 compact:p-3 ${hasLayout ? 'h-dvh grid grid-rows-[48px_minmax(0,1fr)] gap-4' : ''}`}>
     <header className={`flex items-center min-h-12 border-0 border-b border-solid border-[#d8ddd1] ${hasLayout ? 'gap-3 min-w-0 overflow-x-auto narrow:gap-2' : 'gap-4 compact:gap-2'}`}>
       <span className={`text-[24px] text-[#496953] ${hasLayout ? 'narrow:hidden' : 'compact:hidden'}`} aria-hidden="true">▧</span><h1 className={`m-0 tracking-[-.6px] whitespace-nowrap ${hasLayout ? 'shrink-0 text-[16px] narrow:text-[14px]' : 'text-[18px] compact:text-[14px]'}`}>Terrain layout planner</h1>
       {layout && <><h2 className="m-0 shrink-0 pl-3 border-0 border-l border-solid border-[#d8ddd1] text-[14px] tracking-normal whitespace-nowrap narrow:text-[13px] narrow:pl-2">{layout.game === 'firefight' ? 'Firefight' : 'Custom game'} · {measurement(layout.board.width, units)} × {measurement(layout.board.height, units)}</h2><div role="toolbar" aria-label="Terrain editing" className="flex items-center gap-3 ml-auto shrink-0 narrow:gap-2">
           <div className={toolbarGroup}>
+            <button ref={settingsTrigger} className={toolbarButton} type="button" aria-label="Layout settings" title="Layout settings" onClick={() => setSettingsOpen(true)}><ToolbarIcon path="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M19 12l2-1-2-4-2 1-2-1-1-2h-4L9 7 7 8 5 7l-2 4 2 1v2l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4-2-1z" /></button>
             <button className={toolbarButton} type="button" aria-label="Undo" aria-keyshortcuts="Control+z Meta+z" title="Undo (Ctrl/Cmd+Z)" onClick={undo} disabled={!canUndo}><ToolbarIcon path="M9 4 4 9l5 5 M4 9h10a6 6 0 0 1 0 12" /></button>
             <button className={toolbarButton} type="button" aria-label="Redo" aria-keyshortcuts="Control+Shift+z Meta+Shift+z Control+y" title="Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)" onClick={redo} disabled={!canRedo}><ToolbarIcon path="m15 4 5 5-5 5 M20 9H10a6 6 0 0 0 0 12" /></button>
             <button className={toolbarButton} type="button" aria-label="Duplicate terrain" title="Duplicate selected terrain" disabled={!selectedPiece} onClick={() => {
@@ -136,7 +140,7 @@ function App() {
         const boardWidth = Number(size === 'custom' ? width : size) / (size === 'custom' ? unitFactor(units) : 1)
         const boardHeight = Number(size === 'custom' ? height : size) / (size === 'custom' ? unitFactor(units) : 1)
         if (!(Number.isFinite(boardWidth) && boardWidth > 0 && Number.isFinite(boardHeight) && boardHeight > 0)) { setFormError('Board dimensions must be positive numbers.'); return }
-        createLayout({ version: 1, game, board: { width: boardWidth, height: boardHeight }, pieces: [] })
+        createLayout({ version: 2, tags: suppliedTags(), game, board: { width: boardWidth, height: boardHeight }, pieces: [] })
       }}>
         <label className={setupLabel}>Units<select className={`${fieldControl} w-full p-3`} value={units} onChange={event => {
           const next = event.target.value as Units
@@ -186,10 +190,11 @@ function App() {
         <section className={panel} aria-label="Terrain pieces"><p className={`${eyebrow} text-[#75816c]`}>ON THE BOARD</p><h3 className={panelHeading}>{layout.pieces.length} terrain {layout.pieces.length === 1 ? 'piece' : 'pieces'}</h3>
         <ul className="list-none p-0 mb-0">{layout.pieces.map((piece, index) => <li key={piece.id}><button className="text-left w-full p-2 border-0 bg-transparent text-[#465c42] rounded-sm aria-pressed:bg-[#e3e9da]" aria-pressed={selected === piece.id} onClick={() => setSelected(piece.id)}>{piece.name} {index + 1}</button></li>)}</ul></section>
         {selectedPiece && <section className={panel} aria-label="Selected terrain"><p className={`${eyebrow} text-[#75816c]`}>SELECTED TERRAIN</p><h3 className={panelHeading}>{selectedPiece.name}</h3><p className={panelText}>Position: {units === 'in' ? `${selectedPiece.x.toFixed(1)}″, ${selectedPiece.y.toFixed(1)}″` : `${measurement(selectedPiece.x, units)}, ${measurement(selectedPiece.y, units)}`}</p>
-          <TerrainProperties key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} availableTags={[...new Set([...terrainCatalog.flatMap(template => template.tags), ...layout.pieces.flatMap(piece => piece.tags)])]} onApply={editPiece} />
+          <TerrainProperties key={JSON.stringify(selectedPiece) + units} piece={selectedPiece} units={units} availableTags={layout.tags} onApply={editPiece} />
           <p className={panelText}>Drag the round handle above the selected footprint to rotate. Hold Ctrl to snap in 15° increments.</p>
         </section>}
       </aside></div>
+      {settingsOpen && <LayoutSettings layout={layout} onSave={tags => { if (JSON.stringify(tags) !== JSON.stringify(layout.tags)) updateLayout({ ...layout, tags }); setSettingsOpen(false); settingsTrigger.current?.focus() }} onCancel={() => { setSettingsOpen(false); settingsTrigger.current?.focus() }} />}
     </>}
   </main>
 }

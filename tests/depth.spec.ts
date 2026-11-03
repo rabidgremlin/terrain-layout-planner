@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test'
+import { suppliedTags } from '../src/planner'
 
 const savedLayout = (footprint: object) => ({
-  version: 1, game: 'custom', board: { width: 48, height: 36 },
+  version: 2, tags: [...suppliedTags(), { id: 'Ancient', name: 'Ancient', blocksLos: false }], game: 'custom', board: { width: 48, height: 36 },
   pieces: [{ id: 'saved-terrain', name: 'Forest', footprint, x: 7.125, y: 8.25,
-    rotation: 30, colour: '#123456', tags: ['Cover', 'Difficult', 'Dense', 'Ancient'], visibility: 'dense' }],
+    rotation: 30, colour: '#123456', tags: ['Cover', 'Difficult', 'Dense', 'Ancient'] }],
 })
 
 test('depth-based saves expose independent terrain depth and round-trip edits', async ({ page }) => {
   await page.addInitScript(layout => {
-    const key = 'terrain-planner.current-layout.v1'
+    const key = 'terrain-planner.current-layout.v2'
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(layout))
   }, savedLayout({ kind: 'ellipse', width: 8, depth: 3 }))
   await page.goto('/')
@@ -32,35 +33,14 @@ test('depth-based saves expose independent terrain depth and round-trip edits', 
   await expect(page.getByLabel('Y position')).toHaveValue('8.25')
   await expect(page.getByLabel('Rotation (degrees)')).toHaveValue('30')
   await expect(page.getByLabel('Colour', { exact: true })).toHaveValue('#123456')
-  await expect(page.getByLabel('Visibility behaviour')).toHaveValue('dense')
+  await expect(page.getByText('Blocks LOS: Yes')).toBeVisible()
   await expect(page.getByRole('checkbox', { name: 'Ancient', exact: true })).toBeChecked()
 })
 
-test('legacy elliptical height loads as depth without changing geometry', async ({ page }) => {
-  await page.addInitScript(layout => localStorage.setItem('terrain-planner.current-layout.v1', JSON.stringify(layout)),
-    savedLayout({ kind: 'ellipse', width: 8, height: 3.25 }))
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
-  await expect(page.getByLabel('Terrain depth')).toHaveValue('3.25')
-  await expect(page.getByLabel('Terrain width')).toHaveValue('8')
-  await expect(page.getByLabel('X position')).toHaveValue('7.125')
-  await expect(page.getByLabel('Y position')).toHaveValue('8.25')
-  await expect(page.getByLabel('Rotation (degrees)')).toHaveValue('30')
-})
-
-test('explicit footprint depth takes precedence over legacy height', async ({ page }) => {
-  await page.addInitScript(layout => localStorage.setItem('terrain-planner.current-layout.v1', JSON.stringify(layout)),
-    savedLayout({ kind: 'rectangle', width: 8, depth: 3, height: 9 }))
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Forest 1', exact: true }).click()
-  await expect(page.getByLabel('Terrain depth')).toHaveValue('3')
-  await expect(page.getByLabel('Terrain width')).toHaveValue('8')
-})
-
 for (const depth of [0, -1, null, '4']) {
-  test(`invalid depth ${JSON.stringify(depth)} is rejected even with a valid legacy height`, async ({ page }) => {
-    await page.addInitScript(layout => localStorage.setItem('terrain-planner.current-layout.v1', JSON.stringify(layout)),
-      savedLayout({ kind: 'ellipse', width: 8, depth, height: 6 }))
+  test(`invalid depth ${JSON.stringify(depth)} is rejected`, async ({ page }) => {
+    await page.addInitScript(layout => localStorage.setItem('terrain-planner.current-layout.v2', JSON.stringify(layout)),
+      savedLayout({ kind: 'ellipse', width: 8, depth }))
     await page.goto('/')
     await expect(page.getByRole('alert')).toContainText('Your saved layout could not be loaded')
     await expect(page.getByRole('button', { name: 'Create layout', exact: true })).toBeVisible()
