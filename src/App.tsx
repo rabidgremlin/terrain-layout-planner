@@ -11,7 +11,7 @@ import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
 import type { Game, TerrainPiece, TerrainTemplate } from './planner'
 import { LayoutSettings } from './LayoutSettings'
-import { suppliedTags } from './planner'
+import { suppliedTags, withTagDefinitions } from './planner'
 import { fieldControl, setupLabel } from './uiStyles'
 
 const toolbarButton = 'grid place-items-center size-8 p-0 border border-solid border-transparent rounded-[5px] bg-transparent text-[#465c42] enabled:hover:bg-[#e9eddf] aria-pressed:border-[#90a587] aria-pressed:bg-[#dce6d2] aria-pressed:text-[#285849]'
@@ -64,7 +64,7 @@ function App() {
   }, [])
   const snap = (value: number) => snapping ? Math.round(value / grid) * grid : value
   function editPiece(next: TerrainPiece) {
-    if (layout) updateLayout({ ...layout, pieces: layout.pieces.map(piece => piece.id === next.id ? next : piece) })
+    if (layout) updateLayout({ ...layout, pieces: layout.pieces.map(piece => piece.id === next.id ? { ...next, tags: next.tags.filter(id => layout.tags.some(tag => tag.id === id)) } : piece) })
   }
   useEffect(() => {
     if (!hasLayout || !boardRef.current) return
@@ -76,7 +76,7 @@ function App() {
   const selectedPiece = layout?.pieces.find(piece => piece.id === selected)
   function place(template: TerrainTemplate, x: number, y: number) {
     if (!layout) return
-    const piece: TerrainPiece = { ...structuredClone(template), id: crypto.randomUUID(), x: snap(x), y: snap(y) }
+    const piece: TerrainPiece = { ...structuredClone(template), id: crypto.randomUUID(), tags: template.tags.filter(id => layout.tags.some(tag => tag.id === id)), x: snap(x), y: snap(y) }
     updateLayout({ ...layout, pieces: [...layout.pieces, piece] })
     setSelected(piece.id)
   }
@@ -154,7 +154,7 @@ function App() {
         <button className="border-0 bg-[#315e49] text-white rounded-md py-3.5 px-[22px] w-full mt-2.5" type="submit">Create layout</button>
       </form>
     </section> : <>
-      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden" role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
+      <div className="grid grid-cols-[200px_minmax(0,1fr)_240px] gap-4 min-h-0 compact:grid-cols-[160px_minmax(0,1fr)_200px] compact:gap-3"><TerrainLibrary tags={layout.tags} units={units} scale={scale} dragRef={terrainDragRef} /><section className="min-w-0 min-h-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] gap-2"><div ref={boardRef} className="w-full h-full min-h-0"><div className="shadow-[0_3px_20px_#344b3212] overflow-hidden" role="region" aria-label="Terrain board" style={{ width: layout.board.width * scale, height: layout.board.height * scale }} onDragOver={event => event.preventDefault()} onDrop={event => {
         event.preventDefault()
         const anchor = terrainDragRef.current
         if (event.dataTransfer.getData('text/plain') !== anchor?.template.name || !anchor) return
@@ -194,7 +194,7 @@ function App() {
           <p className={panelText}>Drag the round handle above the selected footprint to rotate. Hold Ctrl to snap in 15° increments.</p>
         </section>}
       </aside></div>
-      {settingsOpen && <LayoutSettings layout={layout} onSave={tags => { if (JSON.stringify(tags) !== JSON.stringify(layout.tags)) updateLayout({ ...layout, tags }); setSettingsOpen(false); settingsTrigger.current?.focus() }} onCancel={() => { setSettingsOpen(false); settingsTrigger.current?.focus() }} />}
+      {settingsOpen && <LayoutSettings layout={layout} onSave={tags => { if (JSON.stringify(tags) !== JSON.stringify(layout.tags)) updateLayout(withTagDefinitions(layout, tags)); setSettingsOpen(false); settingsTrigger.current?.focus() }} onCancel={() => { setSettingsOpen(false); settingsTrigger.current?.focus() }} />}
     </>}
   </main>
 }

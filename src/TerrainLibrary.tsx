@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { measurement } from './measurements'
 import type { Units } from './measurements'
-import type { TerrainTemplate } from './planner'
+import type { TerrainTag, TerrainTemplate } from './planner'
 import { terrainCatalog } from './terrainCatalog'
 import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
 
-function TemplateCard({ template, units, scale, dragRef }: { template: TerrainTemplate; units: Units; scale: number; dragRef: TerrainDragRef }) {
+function TemplateCard({ template, tags, units, scale, dragRef }: { template: TerrainTemplate; tags: TerrainTag[]; units: Units; scale: number; dragRef: TerrainDragRef }) {
   const previewRef = useRef<HTMLSpanElement>(null)
   const oval = template.footprint.kind === 'ellipse'
   const previewScale = 48 / Math.max(template.footprint.width, template.footprint.depth)
@@ -38,14 +38,14 @@ function TemplateCard({ template, units, scale, dragRef }: { template: TerrainTe
       event.dataTransfer.effectAllowed = 'copy'
       event.dataTransfer.setDragImage(image, anchor.x * width, anchor.y * height)
     }} onDragEnd={() => clearTerrainDrag(dragRef)}><span ref={previewRef} aria-label={`${template.name} footprint preview`} className={`border border-solid border-[#63735c] ${oval ? 'rounded-[50%]' : 'w-[76px] h-12 rounded-[2px]'}`} style={{ background: template.colour, width: oval ? template.footprint.width * previewScale : undefined, height: oval ? template.footprint.depth * previewScale : undefined }} />{template.name} · {measurement(template.footprint.width, units)} × {measurement(template.footprint.depth, units)}</button>
-    <p className="text-[10px] leading-[1.6] text-[#73806b]">{template.tags.join(' · ')}</p>
+    <p className="text-[10px] leading-[1.6] text-[#73806b]">{template.tags.map(id => tags.find(tag => tag.id === id)?.name).join(' · ')}</p>
   </div>
 }
 
-export function TerrainLibrary({ units, scale, dragRef }: { units: Units; scale: number; dragRef: TerrainDragRef }) {
+export function TerrainLibrary({ tags, units, scale, dragRef }: { tags: TerrainTag[]; units: Units; scale: number; dragRef: TerrainDragRef }) {
   useEffect(() => () => clearTerrainDrag(dragRef), [dragRef])
   return <aside className="bg-[#fffef9] border border-solid border-[#d9decf] rounded-lg p-5 self-start max-h-full overflow-y-auto" aria-label="Terrain library">
     <p className="m-0 text-[10px] leading-[1.6] tracking-[2px] font-bold text-[#75816c]">TERRAIN LIBRARY</p><h3 className="text-[15px]">Place your terrain</h3><p className="text-[12px] leading-[1.6] text-[#73806b]">Drag a piece onto the board. Drag it again to adjust its position.</p>
-    {terrainCatalog.map(template => <TemplateCard key={template.name} template={template} units={units} scale={scale} dragRef={dragRef} />)}
+    {terrainCatalog.map(template => <TemplateCard key={template.name} template={{ ...template, tags: template.tags.filter(id => tags.some(tag => tag.id === id)) }} tags={tags} units={units} scale={scale} dragRef={dragRef} />)}
   </aside>
 }

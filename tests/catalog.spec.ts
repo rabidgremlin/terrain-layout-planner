@@ -10,7 +10,7 @@ test('catalog offers the Firefight terrain types and places a circular forest th
   await page.goto('/')
   await page.getByRole('button', { name: 'Create layout' }).click()
   const library = page.getByRole('complementary', { name: 'Terrain library' })
-  for (const name of ['Building', 'Barricade', 'Field', 'Forest', 'Hill', 'Water', 'Lava', 'Rubble', 'Ruin', 'Swamp', 'Mountain', 'Wall']) {
+  for (const name of ['Building', 'Barricade', 'Field', 'Forest', 'Hill', 'Water', 'Lava', 'Rubble', 'Ruin', 'Swamp', 'Mountain', 'Scalable wall', 'Tall wall']) {
     await expect(library.getByRole('button', { name: new RegExp(`${name} ·`) })).toHaveCount(1)
   }
   const board = page.getByRole('region', { name: 'Terrain board' })
@@ -124,7 +124,8 @@ test('catalog defaults follow Firefight tags and derived blocking', async ({ pag
     ['Ruin', ['Cover', 'Unstable'], 'clear'],
     ['Swamp', ['Difficult'], 'clear'],
     ['Mountain', ['Impassable', 'Sight Blocking'], 'blocking'],
-    ['Wall', ['Climbable'], 'clear'],
+    ['Scalable wall', ['Climbable'], 'clear'],
+    ['Tall wall', ['Impassable', 'Sight Blocking'], 'blocking'],
   ] as const
   for (const [name, tags, visibility] of defaults) {
     await page.getByLabel(`${name} footprint preview`, { exact: true }).dragTo(board, { targetPosition: { x: 300, y: 300 } })

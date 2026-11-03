@@ -15,5 +15,6 @@ export const terrainCatalog: readonly TerrainTemplate[] = [
   { name: 'Ruin', footprint: { kind: 'rectangle', width: 6, depth: 4 }, rotation: 0, colour: '#a69e8b', tags: [tagIds.cover, tagIds.unstable] },
   { name: 'Swamp', footprint: { kind: 'ellipse', width: 6, depth: 6 }, rotation: 0, colour: '#8d9972', tags: [tagIds.difficult] },
   { name: 'Mountain', footprint: { kind: 'ellipse', width: 8, depth: 8 }, rotation: 0, colour: '#92958b', tags: [tagIds.impassable, tagIds.sightBlocking] },
-  { name: 'Wall', footprint: { kind: 'rectangle', width: 6, depth: 1 }, rotation: 0, colour: '#a9a49b', tags: [tagIds.climbable] },
+  { name: 'Scalable wall', footprint: { kind: 'rectangle', width: 6, depth: 1 }, rotation: 0, colour: '#a9a49b', tags: [tagIds.climbable] },
+  { name: 'Tall wall', footprint: { kind: 'rectangle', width: 6, depth: 1 }, rotation: 0, colour: '#a9a49b', tags: [tagIds.impassable, tagIds.sightBlocking] },
 ]

@@ -49,3 +49,26 @@ test('save failure remains visible in the compact toolbar layout', async ({ page
   await page.mouse.move(0, 0)
   await expect(page).toHaveScreenshot('editor-save-failure.png', { threshold: 0.01 })
 })
+
+test('wall presets and draft tag management appearance', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Create layout' }).click()
+  const board = page.getByRole('region', { name: 'Terrain board' })
+  for (const [name, x, y] of [['Scalable wall', '10', '10'], ['Tall wall', '20', '15']]) {
+    await page.getByLabel(`${name} footprint preview`).dragTo(board, { targetPosition: { x: 300, y: 300 } })
+    await page.getByLabel('X position').fill(x)
+    await page.getByLabel('Y position').fill(y)
+    await page.getByRole('button', { name: 'Apply', exact: true }).click()
+  }
+  await page.mouse.move(0, 0)
+  await expect(page).toHaveScreenshot('editor-walls.png', { threshold: 0.01 })
+  await page.getByRole('button', { name: 'Layout settings' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Layout settings' })
+  await dialog.getByRole('textbox', { name: 'Tag name: Climbable', exact: true }).fill('Scaling')
+  const pending = page.waitForEvent('dialog')
+  const click = dialog.getByRole('listitem', { name: 'Dangerous', exact: true }).getByRole('button', { name: 'Delete', exact: true }).click()
+  await (await pending).accept()
+  await click
+  await dialog.getByRole('textbox', { name: 'Tag name: Scaling', exact: true }).focus()
+  await expect(page).toHaveScreenshot('settings-tag-edits.png', { threshold: 0.01 })
+})

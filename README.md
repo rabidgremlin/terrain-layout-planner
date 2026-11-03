@@ -81,12 +81,24 @@ The terrain library offers rectangles and ovals with independent width and depth
 Drag a template onto the board, then select a piece to edit its geometry, colour,
 and tag memberships. Choose **Apply** to commit these changes together.
 
-Open **Layout settings** in the toolbar to add tags and change their **Blocks LOS**
-flags. Changes remain a draft until **Save**; **Cancel** discards them. Names are
+Open **Layout settings** in the toolbar to add or rename supplied and custom tags,
+change their **Blocks LOS** flags, or delete them. Deletion asks for confirmation
+and shows how many placed pieces are affected. Save removes the tag memberships
+and catalog associations in this layout; later placements do not recreate them.
+Renaming preserves memberships and catalog associations. Changes remain a draft until **Save**; **Cancel** discards them. Names are
 trimmed and must be unique ignoring case. A piece blocks line of sight if any of
 its assigned tags blocks. Sight Blocking and Dense block by default; other supplied
 tags do not. Dense is treated as a solid obstacle in this two-dimensional planning
-approximation. New placements use the current layout's shared tag rules.
+approximation. Each settings Save is one shared undo/redo step, including deleted
+memberships; undo restores the definitions and their associations. New placements use the current layout's shared tag rules.
+
+The **Scalable wall** and **Tall wall** presets both start as editable 6-inch by
+1-inch rectangles. Scalable walls carry Climbable and do not block LOS with fresh
+defaults; tall walls carry Impassable and Sight Blocking and do block. These are
+editable planner presets under the two-dimensional approximation, rather than
+prescribed physical sizes or a numeric terrain-height model. Both follow this
+layout's current tag names, memberships and blocking rules. Source rule findings
+remain in the research documentation.
 
 Layouts use version 2 storage. Older planner saves are reset rather than migrated.
 See [ADR 0002](docs/adr/0002-derive-los-blocking-from-layout-tags.md) for the model.
@@ -116,9 +128,10 @@ Inline DOM styles are reserved for runtime board/preview dimensions and terrain
 colours. Konva rendering properties remain in the rendering layer. Keep physical
 geometry, board fitting, and screen-to-board conversion independent of styling.
 
-`tests/appearance.spec.ts` compares 22 screenshots against the approved
+`tests/appearance.spec.ts` compares screenshots against the approved
 Chromium/Linux appearance at 1280px, 1000px, and 800px: setup, custom fields,
-selected/deselected terrain, toolbar toggles, hover, keyboard focus, and compact
+selected/deselected terrain, wall presets, tag management, toolbar toggles, hover,
+keyboard focus, and compact
 save-failure feedback. The original Tailwind migration baselines were updated
 for the expanded catalog and properties controls in #5. Run `npx playwright test tests/appearance.spec.ts` to
 compare; inspect differences before intentionally updating any baselines. A small

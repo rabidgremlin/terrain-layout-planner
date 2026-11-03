@@ -34,6 +34,10 @@ export type Layout = {
   pieces: TerrainPiece[]
 }
 export type TerrainTemplate = Omit<TerrainPiece, 'id' | 'x' | 'y'>
+export function withTagDefinitions(layout: Layout, tags: TerrainTag[]): Layout {
+  const ids = new Set(tags.map(tag => tag.id))
+  return { ...layout, tags, pieces: layout.pieces.map(piece => ({ ...piece, tags: piece.tags.filter(id => ids.has(id)) })) }
+}
 const storageKey = 'terrain-planner.current-layout.v2'
 const positive = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
