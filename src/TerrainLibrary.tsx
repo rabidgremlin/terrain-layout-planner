@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { measurement } from './measurements'
 import type { Units } from './measurements'
 import type { TerrainTag, TerrainTemplate } from './planner'
+import { filterDefinedTagIds } from './planner'
 import { terrainCatalog } from './terrainCatalog'
 import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
@@ -46,6 +47,6 @@ export function TerrainLibrary({ tags, units, scale, dragRef }: { tags: TerrainT
   useEffect(() => () => clearTerrainDrag(dragRef), [dragRef])
   return <aside className="bg-[#fffef9] border border-solid border-[#d9decf] rounded-lg p-5 self-start max-h-full overflow-y-auto" aria-label="Terrain library">
     <p className="m-0 text-[10px] leading-[1.6] tracking-[2px] font-bold text-[#75816c]">TERRAIN LIBRARY</p><h3 className="text-[15px]">Place your terrain</h3><p className="text-[12px] leading-[1.6] text-[#73806b]">Drag a piece onto the board. Drag it again to adjust its position.</p>
-    {terrainCatalog.map(template => <TemplateCard key={template.name} template={{ ...template, tags: template.tags.filter(id => tags.some(tag => tag.id === id)) }} tags={tags} units={units} scale={scale} dragRef={dragRef} />)}
+    {terrainCatalog.map(template => <TemplateCard key={template.name} template={{ ...template, tags: filterDefinedTagIds(template.tags, tags) }} tags={tags} units={units} scale={scale} dragRef={dragRef} />)}
   </aside>
 }

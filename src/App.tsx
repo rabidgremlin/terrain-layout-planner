@@ -11,7 +11,7 @@ import { clearTerrainDrag } from './terrainDrag'
 import type { TerrainDragRef } from './terrainDrag'
 import type { Game, TerrainPiece, TerrainTemplate } from './planner'
 import { LayoutSettings } from './LayoutSettings'
-import { suppliedTags, withTagDefinitions } from './planner'
+import { filterDefinedTagIds, suppliedTags, withTagDefinitions } from './planner'
 import { fieldControl, setupLabel } from './uiStyles'
 
 const toolbarButton = 'grid place-items-center size-8 p-0 border border-solid border-transparent rounded-[5px] bg-transparent text-[#465c42] enabled:hover:bg-[#e9eddf] aria-pressed:border-[#90a587] aria-pressed:bg-[#dce6d2] aria-pressed:text-[#285849]'
@@ -64,7 +64,7 @@ function App() {
   }, [])
   const snap = (value: number) => snapping ? Math.round(value / grid) * grid : value
   function editPiece(next: TerrainPiece) {
-    if (layout) updateLayout({ ...layout, pieces: layout.pieces.map(piece => piece.id === next.id ? { ...next, tags: next.tags.filter(id => layout.tags.some(tag => tag.id === id)) } : piece) })
+    if (layout) updateLayout({ ...layout, pieces: layout.pieces.map(piece => piece.id === next.id ? { ...next, tags: filterDefinedTagIds(next.tags, layout.tags) } : piece) })
   }
   useEffect(() => {
     if (!hasLayout || !boardRef.current) return
@@ -76,7 +76,7 @@ function App() {
   const selectedPiece = layout?.pieces.find(piece => piece.id === selected)
   function place(template: TerrainTemplate, x: number, y: number) {
     if (!layout) return
-    const piece: TerrainPiece = { ...structuredClone(template), id: crypto.randomUUID(), tags: template.tags.filter(id => layout.tags.some(tag => tag.id === id)), x: snap(x), y: snap(y) }
+    const piece: TerrainPiece = { ...structuredClone(template), id: crypto.randomUUID(), tags: filterDefinedTagIds(template.tags, layout.tags), x: snap(x), y: snap(y) }
     updateLayout({ ...layout, pieces: [...layout.pieces, piece] })
     setSelected(piece.id)
   }
