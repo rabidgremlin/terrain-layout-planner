@@ -6,7 +6,7 @@ import { secondaryButton } from './uiStyles'
 
 export function SightLineOverlay({ tool, scale }: { tool: SightLineTool; scale: number }) {
   const { selection, cursor, result } = tool
-  const colour = result?.blocked ? '#a44132' : '#285849'
+  const colour = result?.blocked ? '#465c42' : '#285849'
   return <>
     {selection && <>
       {selection.to && <Line points={[selection.from.x * scale, selection.from.y * scale, selection.to.x * scale, selection.to.y * scale]} stroke={colour} strokeWidth={2} dash={result?.blocked ? [6, 4] : undefined} listening={false} />}
